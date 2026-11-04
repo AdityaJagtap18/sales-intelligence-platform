@@ -23,6 +23,44 @@ services:
       retries: 10
 
   # ---------------------------------------------------------------------
+  # Source database for local ingestion (ADR-005 data-ingestion path:
+  # restore AdventureWorksLT2022 here, extract tables, upload to
+  # Databricks — this is the *source*, not the app's own database).
+  # ---------------------------------------------------------------------
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: ${SQLSERVER_SA_PASSWORD:-Nexora_dev_password1}
+    ports:
+      - '${SQLSERVER_PORT:-1433}:1433'
+    volumes:
+      - sqlserver-data:/var/opt/mssql/data
+      - ./infrastructure/sqlserver:/var/opt/mssql/backup:ro
+    healthcheck:
+      test: ['CMD-SHELL', '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # One-shot: restores AdventureWorksLT2022.bak into the sqlserver service,
+  # then exits. Safe to re-run (checks for an existing database first).
+  sqlserver-restore:
+    image: mcr.microsoft.com/mssql-tools:latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SA_PASSWORD: ${SQLSERVER_SA_PASSWORD:-Nexora_dev_password1}
+    volumes:
+      # Only the script needs to be visible here — the RESTORE statement's
+      # file paths are evaluated by the sqlserver container, not this one.
+      - ./infrastructure/sqlserver/restore.sh:/restore.sh:ro
+    entrypoint: ['bash', '/restore.sh']
+    restart: 'no'
+
+  # ---------------------------------------------------------------------
   # Object storage (bronze/silver/gold, documents) — same key layout the
   # original ADLS Gen2 bronze/SalesLT/... paths used.
   # ---------------------------------------------------------------------
@@ -162,6 +200,7 @@ services:
 
 volumes:
   postgres-data:
+  sqlserver-data:
   minio-data:
   neo4j-data:
   qdrant-data:
