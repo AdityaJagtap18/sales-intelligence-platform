@@ -1,57 +1,67 @@
-# System Architecture Baseline (Phase 1)
+# System Architecture Baseline
 
-This is the baseline to be refined in Phase 3+. It fixes component ownership so later phases don't re-litigate it.
+> **Superseded in part by ADR-005.** The original Phase 1 baseline put a local PySpark
+> worker + MinIO in the data-engineering role below. Per ADR-005, that role now belongs to
+> **Databricks Free Edition** — the hybrid architecture's one cloud component. This doc is
+> updated to match; see ADR-005 for the full rationale.
 
-## Component map
+## Component map (current)
 
 ```
-┌─────────────┐      REST       ┌───────────────────┐
-│  Angular    │ ───────────────▶│  Spring Boot API    │
-│  (frontend) │ ◀─────────────── │  (control plane)    │
-└─────────────┘                 └─────────┬───────────┘
-                                           │ job dispatch (REST/queue table in Postgres)
-                                           ▼
-                                 ┌───────────────────┐
-                                 │  Python Worker      │
-                                 │  (PySpark + Delta)  │
-                                 └─────┬──────┬────────┘
-                     ┌─────────────────┘      └───────────────┐
-                     ▼                                         ▼
-           ┌─────────────────┐                       ┌─────────────────┐
-           │ MinIO (bronze/    │                       │ PostgreSQL        │
-           │ silver/gold,      │                       │ (app metadata,    │
-           │ documents)        │                       │ pipeline registry,│
-           └─────────────────┘                       │ prompts, serving   │
-                                                        │ views)             │
-           ┌─────────────────┐  ┌─────────────────┐  └─────────────────┘
-           │ Neo4j (graph)     │  │ Qdrant (vectors)  │
-           └─────────────────┘  └─────────────────┘
-                                                        ┌─────────────────┐
-                                                        │ Ollama (local LLM) │
+┌─────────────┐      REST       ┌───────────────────┐        authenticated API       ┌──────────────────────┐
+│  Angular    │ ───────────────▶│  Spring Boot API    │ ──────────────────────────────▶│  Databricks Free       │
+│  (frontend) │ ◀─────────────── │  (control plane)    │◀──────────────────────────────│  Edition (cloud)       │
+└─────────────┘                 └─────────┬───────────┘   Jobs API / SQL Warehouse    │  Bronze/Silver/Gold,   │
+                                           │                                            │  Delta Lake, Unity     │
+                                           │                                            │  Catalog, Jobs/        │
+                                           ▼                                            │  Lakeflow              │
+                                 ┌───────────────────┐                                  └──────────────────────┘
+                                 │  PostgreSQL          │
+                                 │  (app metadata,      │
+                                 │  pipeline registry,   │
+                                 │  execution history,   │
+                                 │  prompts, audit)      │
+                                 └───────────────────┘
+
+           ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+           │ MinIO (local       │  │ Neo4j (graph)     │  │ Qdrant (vectors)  │
+           │ documents only,    │  └─────────────────┘  └─────────────────┘
+           │ NOT analytical     │
+           │ bronze/silver/gold)│                        ┌─────────────────┐
+           └─────────────────┘                        │ Ollama (local LLM) │
                                                         └─────────────────┘
 
-Observability (cross-cutting): OpenTelemetry SDKs in Spring Boot + Python worker →
-Prometheus (metrics) + Grafana (eng dashboards); Angular has its own
-app-level Observability Center reading aggregated data via Spring Boot, not Grafana directly.
+Observability (local side): OpenTelemetry SDK in Spring Boot → Prometheus → Grafana.
+Observability (Databricks side): Jobs API / SQL Warehouse query history, surfaced through
+Spring Boot, clearly labeled as Databricks-sourced — never conflated with local metrics.
+Angular has its own app-level Observability Center reading aggregated data via Spring
+Boot, not Grafana or Databricks directly.
 ```
 
 ## Ownership rules (fixed now to avoid drift later)
 
-- **Spring Boot owns control, never bulk data.** It tracks pipeline *definitions* and *execution metadata* (status, duration, row counts, errors) in Postgres. It never pulls Gold-layer rows through itself for BI charts in bulk — Angular reads BI data from Postgres serving views/tables directly through a Spring Boot read endpoint, but Spring Boot does not run Spark.
-- **Python worker owns all PySpark/Delta execution.** Triggered by Spring Boot (simple HTTP call or a `pipeline_runs` queue table it polls — decide in Phase 5, not now); reports status/metrics back to Spring Boot via callback/REST, not directly into Grafana.
-- **MinIO is the only physical object store.** Bronze/Silver/Gold keep the existing key layout (`bronze/SalesLT/{table}/...`, `Silver/...`, `gold/...`) so the ported notebook logic needs no path rewriting beyond swapping `dbutils.fs` / `abfss://` for `s3a://` (Spark) or boto3 (document uploads).
-- **Postgres is the only system of record for app metadata** (users, pipeline registry, execution history, dataset catalog metadata, prompt library + versions, audit log) — the Context Lake's "metadata catalog" is Postgres tables, not a separate database.
-- **The Context Lake is a logical layer, not a new datastore.** It is Spring Boot APIs that join across Postgres (metadata), MinIO (files), Qdrant (semantic search) and Neo4j (lineage/relationships) — per spec §4's explicit instruction not to confuse it with the physical data lake.
-- **Neo4j** holds only graph nodes/edges (business + technical entities) and provenance flags (source-fact vs inferred, per Image 3's solid/dotted edge convention). Sync direction is one-way for MVP: Postgres/MinIO facts → Neo4j, never the reverse.
+- **Spring Boot owns control, never bulk data processing.** It tracks pipeline *definitions* and *execution metadata* (status, duration, row counts, errors) in Postgres, and persists Databricks job-run history locally so historical runs are visible even if Databricks is unreachable. It triggers and monitors Databricks jobs through the Jobs API and queries Gold-layer data through SQL Warehouse connectivity — it never runs Spark itself.
+- **Databricks Free Edition owns all Bronze/Silver/Gold processing.** Delta tables live in Databricks-managed storage under Unity Catalog, not in MinIO. Orchestration uses Databricks Jobs/Lakeflow where Free Edition supports it.
+- **MinIO is local-only, document-scoped.** It holds Context Lake uploads and other application-managed files — never analytical bronze/silver/gold data. (This narrows MinIO's role from the original Phase 3 plan; see ADR-005. No code currently depends on the old layout, so nothing needs to be migrated.)
+- **Postgres is the only system of record for app metadata** (users, pipeline registry, Databricks execution history mirror, dataset catalog metadata, prompt library + versions, audit log) — the Context Lake's "metadata catalog" is Postgres tables, not a separate database.
+- **The Context Lake is a logical layer, not a new datastore.** It is Spring Boot APIs that join across Postgres (metadata), MinIO (local documents), Qdrant (semantic search), Neo4j (lineage/relationships), and references to Databricks-held datasets (not their bulk data) — per spec §4's explicit instruction not to confuse it with a physical data lake.
+- **Neo4j** holds only graph nodes/edges (business + technical entities) and provenance flags (source-fact vs inferred, per Image 3's solid/dotted edge convention). Sync direction is one-way for MVP: Postgres/Databricks facts → Neo4j, never the reverse.
 - **Qdrant** holds only vectors + pointers (doc/dataset id) back to Postgres/MinIO — never the canonical text itself beyond what's needed for retrieval snippets.
-- **Ollama** is called only through a provider interface in the Python worker (and/or Spring Boot for lightweight calls) so a future hosted-LLM swap doesn't touch business logic — per spec §5.2.
+- **Ollama** is called only through a provider interface (Spring Boot, and/or a future local worker for heavier batch work) so a future hosted-LLM swap doesn't touch business logic — per spec §5.2.
+- **Databricks credentials (host + PAT) live only in Spring Boot's environment.** Never in Angular, never hardcoded, never requested or pasted into chat — see ADR-005.
 
-## What Phase 1 deliberately leaves open
+## What's deliberately left open
 
-- Job dispatch mechanism (sync HTTP vs. polling queue table) — decided in Phase 5 against real pipeline-execution needs, not speculatively now.
-- Whether Spring Boot or the Python worker does embedding generation — decided in Phase 6 (Context Lake) based on what's actually simplest with Ollama's embedding models.
-- Exact Postgres schema — drafted in Phase 3/4, not Phase 1.
+- Exact Databricks Jobs/Lakeflow orchestration shape — decided in Phase 5 once Phase 3's
+  connectivity validation shows what Free Edition actually supports.
+- Whether embedding generation happens in Spring Boot or a dedicated local worker — decided
+  in Phase 6 (Context Lake) based on what's simplest with Ollama's embedding models.
+- Exact Postgres schema — drafted in Phase 3/4, not earlier.
 
-## Azure compatibility seam (future phase only)
+## Azure compatibility seam (future phase only, unaffected by ADR-005)
 
-Kept thin on purpose: object storage access goes through a small storage-path abstraction (so `s3a://` → `abfss://` is a config change, consistent with the notebooks already using URI-style paths), and Ollama calls go through a provider interface. No Azure SDKs, Key Vault clients, or ADF-shaped abstractions are introduced now — per spec §5.2, over-building this seam before it's needed is explicitly discouraged.
+Kept thin on purpose: Ollama calls go through a provider interface, and the Databricks
+integration is already behind a Spring Boot abstraction (Jobs API / SQL Warehouse client),
+which happens to make a future Azure Databricks swap a configuration change rather than a
+rewrite. No Azure SDKs, Key Vault clients, or ADF-shaped abstractions are introduced now —
+per spec §5.2, over-building this seam before it's needed is explicitly discouraged.

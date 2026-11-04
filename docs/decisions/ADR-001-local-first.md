@@ -1,7 +1,9 @@
 # ADR-001: Local-first deployment, Azure deferred
 
 ## Status
-Accepted
+Accepted, qualified by ADR-005 — Databricks Free Edition is now the one intentional
+exception to "entirely local" (chosen specifically to preserve genuine Databricks usage,
+not as drift back toward a paid cloud dependency). Every other decision below still holds.
 
 ## Context
 The original Azure subscription and all deployed resources (ADF, ADLS Gen2, Databricks workspace, Synapse, Key Vault) no longer exist. Rebuilding on Azure first would require provisioning a paid subscription before any functional progress is visible, and would block development on cloud resource availability.

@@ -9,3 +9,6 @@ backend/**/target/
 # Env
 .env
 *.local
+
+# Large sample data file — downloaded by setup, not committed
+infrastructure/sqlserver/*.bak
