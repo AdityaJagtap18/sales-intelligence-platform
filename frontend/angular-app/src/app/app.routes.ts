@@ -38,7 +38,11 @@ export const routes: Routes = [
       { path: 'analytics/anomaly-detection', ...placeholder({ title: 'Anomaly Detection', description: 'Investigate detected anomalies across business metrics.', icon: 'alert-triangle', phase: 'Phase 9 — Business Intelligence' }) },
 
       { path: 'data-platform/pipelines', ...placeholder({ title: 'Data Pipelines', description: 'Pipeline registry and configuration.', icon: 'git-branch', phase: 'Phase 5 — Pipeline Management' }) },
-      { path: 'data-platform/pipeline-runs', ...placeholder({ title: 'Pipeline Runs', description: 'Execution history, stage-level metrics, retries.', icon: 'activity', phase: 'Phase 5 — Pipeline Management' }) },
+      {
+        path: 'data-platform/pipeline-runs',
+        loadComponent: () => import('./features/data-platform/pipeline-runs.component').then((m) => m.PipelineRunsComponent),
+        data: { title: 'Pipeline Runs' },
+      },
       { path: 'data-platform/sources', ...placeholder({ title: 'Data Sources', description: 'Registered source systems feeding the platform.', icon: 'plug', phase: 'Phase 4 — Core Data Engineering' }) },
       { path: 'data-platform/context-lake', ...placeholder({ title: 'Context Lake', description: 'Centralized dataset, document and semantic context management.', icon: 'database', phase: 'Phase 6 — Context Lake' }) },
       { path: 'data-platform/catalog', ...placeholder({ title: 'Data Catalog', description: 'Browse and search registered data assets and metadata.', icon: 'layers', phase: 'Phase 6 — Context Lake' }) },

@@ -20,6 +20,41 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.5.0] — Phase 5 completed: Databricks orchestration + local observability
+
+### Added
+- Spring Boot Databricks control plane (`com.nexora.platform.databricks`):
+  `DatabricksJobsClient` (run-now / runs-get) and `DatabricksSqlClient` (SQL
+  Statement Execution API, used to read Gold/report data without DBFS or a
+  JDBC driver). Credentials come from env vars and are never returned by any
+  endpoint.
+- `com.nexora.platform.pipeline`: `PipelineRun` entity + Postgres-backed
+  history (`schema.sql`), and `PipelineController` (`POST /pipelines/run`,
+  `GET /pipelines/runs`, `GET /pipelines/runs/{id}`) — the only way Angular
+  touches the Databricks pipeline.
+- `DataQualityMetricsPoller`: republishes the latest
+  `workspace.nexora.data_quality_report` run as `nexora_data_quality_check`
+  Prometheus gauges (1=PASS, 0.5=SKIPPED, 0=FAIL), so Grafana needs no second
+  datasource for pipeline data quality.
+- Grafana dashboard (`nexora-platform-health.json`): infra panels (API
+  up/down, HTTP request rate, JVM heap) and pipeline panels (data quality
+  pass rate, per-check table, pipeline-run-triggered rate).
+- Angular: `PipelineApiService` and a real Pipeline Runs page
+  (`/data-platform/pipeline-runs`, replacing its Phase 2 placeholder) — a
+  "Run Pipeline" button and a polling run-history table with status badges.
+
+### Verified
+- Triggered a run from the Angular UI itself end-to-end: Spring Boot called
+  Databricks `run-now`, persisted the run, and the UI's own polling (not a
+  manual API call) showed it progress from `PENDING` to `TERMINATED` /
+  `SUCCESS` live in the browser — done twice, for two separate runs.
+- Confirmed in Prometheus that the data-quality gauges and the
+  `/pipelines/run` request counter are scraped, and that the Grafana
+  dashboard is provisioned with metric queries matching the real Micrometer
+  tags (fixed one query that had a stray `/api` prefix on its `uri` label).
+
+---
+
 ## [0.4.0] — Phase 4 completed: Databricks pipeline (Bronze/Silver/Gold)
 
 ### Added

@@ -198,6 +198,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-nexora}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-nexora}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-nexora_dev_password}
+      # Databricks control-plane access (ADR-005) — Spring Boot is the only
+      # thing that ever sees these; never forwarded to Angular.
+      DATABRICKS_HOST: ${DATABRICKS_HOST}
+      DATABRICKS_TOKEN: ${DATABRICKS_TOKEN}
+      DATABRICKS_JOB_ID: ${DATABRICKS_JOB_ID}
+      DATABRICKS_SQL_WAREHOUSE_ID: ${DATABRICKS_SQL_WAREHOUSE_ID}
     ports:
       - '${SPRING_API_PORT:-8080}:8080'
     depends_on:

@@ -1,0 +1,118 @@
+{
+  "title": "NEXORA Platform Health",
+  "uid": "nexora-platform-health",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Infra",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 2,
+      "title": "Spring Boot API Up",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "up{job=\"spring-boot-api\"}", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "red" }, { "value": 1, "color": "green" }] }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "HTTP Request Rate (spring-boot-api)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "sum by (uri, status) (rate(http_server_requests_seconds_count{job=\"spring-boot-api\"}[5m]))", "refId": "A", "legendFormat": "{{uri}} [{{status}}]" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "JVM Heap Used (spring-boot-api)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{job=\"spring-boot-api\", area=\"heap\"})", "refId": "A", "legendFormat": "heap used" }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Pipeline",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 11,
+      "title": "Data Quality: Overall Pass Rate (latest run)",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "avg(nexora_data_quality_check)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 0.5, "color": "yellow" },
+              { "value": 0.9, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Data Quality Checks — Latest Run (1=PASS, 0.5=SKIPPED, 0=FAIL)",
+      "type": "table",
+      "gridPos": { "h": 7, "w": 18, "x": 6, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "nexora_data_quality_check",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true } } }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Pipeline Runs Triggered (rate, via Spring Boot /pipelines/run)",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{job=\"spring-boot-api\", uri=\"/pipelines/run\"}[15m]))", "refId": "A", "legendFormat": "runs triggered" }
+      ]
+    }
+  ]
+}

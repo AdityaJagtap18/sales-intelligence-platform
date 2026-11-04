@@ -10,7 +10,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200")
+                // 4200 is the standard `ng serve` port; 4201 is what the CLI falls
+                // back to when 4200 is already taken by another local project.
+                .allowedOrigins("http://localhost:4200", "http://localhost:4201")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*");
     }

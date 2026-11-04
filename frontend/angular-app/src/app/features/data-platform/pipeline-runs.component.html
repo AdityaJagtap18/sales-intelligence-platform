@@ -1,0 +1,30 @@
+<div class="pipeline-runs-page">
+  <app-panel title="Pipeline Runs" subtitle="Bronze -> Silver -> Gold runs of the Databricks job, triggered through Spring Boot (ADR-005).">
+    <div panelActions>
+      <button class="run-button" type="button" [disabled]="triggering()" (click)="runPipeline()">
+        <app-icon [name]="triggering() ? 'refresh' : 'play'" [size]="14" />
+        {{ triggering() ? 'Starting...' : 'Run Pipeline' }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <app-data-table [columns]="columns" [rows]="runs()" [cellTemplates]="{ lifecycleState: statusCell, startedAt: startedCell, completedAt: completedCell }" emptyMessage="No pipeline runs yet — click Run Pipeline to start one." />
+  </app-panel>
+</div>
+
+<ng-template #statusCell let-row>
+  <app-badge [tone]="statusTone(row.lifecycleState, row.resultState)">
+    {{ row.lifecycleState }}{{ row.resultState ? ' / ' + row.resultState : '' }}
+  </app-badge>
+</ng-template>
+
+<ng-template #startedCell let-row>
+  {{ row.startedAt | date: 'short' }}
+</ng-template>
+
+<ng-template #completedCell let-row>
+  {{ row.completedAt ? (row.completedAt | date: 'short') : '—' }}
+</ng-template>
