@@ -1,73 +1,68 @@
 <div class="page">
   <div class="page-toolbar">
-    <app-badge tone="warning">
-      <app-icon name="alert-triangle" [size]="12" />
-      Mock data — Phase 2 shell, no live pipeline yet
+    <app-badge tone="success">
+      <app-icon name="database" [size]="12" />
+      Live — workspace.gold.* via Databricks (AdventureWorksLT sample, June 2008)
     </app-badge>
-    <app-filter-bar dateRangeLabel="May 1 – May 31, 2026" />
+    <app-filter-bar dateRangeLabel="June 2008" />
   </div>
 
+  @if (errorMessage()) {
+    <p class="error-banner">{{ errorMessage() }}</p>
+  }
+
   <div class="kpi-grid">
-    @for (kpi of kpis; track kpi.label) {
+    @for (kpi of kpis(); track kpi.label) {
       <app-kpi-card
         [label]="kpi.label"
         [value]="kpi.value"
         [icon]="kpi.icon"
         [deltaLabel]="kpi.deltaLabel"
-        [trend]="kpi.trend"
-        [positiveIsGood]="kpi.positiveIsGood"
+        trend="flat"
         [sparkline]="kpi.sparkline"
       />
     }
   </div>
 
   <div class="main-grid">
-    <app-panel title="Revenue Over Time" subtitle="Actual revenue vs. expected baseline, with anomaly markers">
-      <app-area-line-chart [points]="revenueSeries" />
+    <app-panel title="Order Value Trend" subtitle="Each order's total vs. the mean, with z-score anomaly markers">
+      <app-area-line-chart [points]="revenueSeries()" />
     </app-panel>
 
-    <app-panel title="AI Insight" [accent]="true">
-      <div panelActions>
-        <app-badge tone="accent">High Impact</app-badge>
-      </div>
-      <h4 class="insight-title">{{ aiInsight.title }}</h4>
-      <p class="insight-body">{{ aiInsight.body }}</p>
-
-      <div class="factor-list">
-        @for (f of aiInsight.factors; track f.label) {
-          <div class="factor-row">
-            <div class="factor-top">
-              <span>{{ f.label }}</span>
-              <span class="factor-delta">{{ f.delta }}</span>
-            </div>
-            <div class="factor-track">
-              <div class="factor-fill" [style.width.%]="f.weight"></div>
-            </div>
-          </div>
-        }
-      </div>
-
-      <div class="confidence-row">
-        <span>AI Confidence</span>
-        <span class="confidence-value">{{ aiInsight.confidence }}%</span>
-      </div>
-      <div class="factor-track">
-        <div class="factor-fill" [style.width.%]="aiInsight.confidence"></div>
-      </div>
+    <app-panel title="Top Anomaly" [accent]="true">
+      @if (topAnomaly; as anomaly) {
+        <div panelActions>
+          <app-badge [tone]="impactTone(anomaly.impact)">{{ anomaly.impact }} Impact</app-badge>
+        </div>
+        <h4 class="insight-title">Order {{ anomaly.date }} is a statistical outlier.</h4>
+        <p class="insight-body">
+          Its total was unusually {{ anomaly.direction === 'up' ? 'high' : 'low' }} relative to the mean order value
+          across all 32 June 2008 orders (|z-score| > 1.3).
+        </p>
+        <div class="confidence-row">
+          <span>Confidence</span>
+          <span class="confidence-value">{{ anomaly.confidence }}%</span>
+        </div>
+        <div class="factor-track">
+          <div class="factor-fill" [style.width.%]="anomaly.confidence"></div>
+        </div>
+      } @else {
+        <p class="insight-body">No statistical outliers detected in the current order data.</p>
+      }
     </app-panel>
   </div>
 
   <div class="secondary-grid">
-    <app-panel title="Revenue by Channel">
-      <app-horizontal-bar-chart [data]="revenueByChannel" />
+    <app-panel title="Revenue by Category" subtitle="Share of total revenue">
+      <app-horizontal-bar-chart [data]="revenueByCategory()" />
     </app-panel>
 
-    <app-panel title="Users by Segment">
-      <app-donut-chart [data]="usersBySegment" centerLabel="Total users" centerValue="1,236" />
+    <app-panel title="Top 5 Customers by Revenue">
+      <app-donut-chart [data]="revenueByTopCustomers()" centerLabel="Top 5 revenue" [centerValue]="topCustomersTotal" />
     </app-panel>
 
-    <app-panel title="Recent Anomalies">
-      <app-data-table [columns]="anomalyColumns" [rows]="recentAnomalies" [cellTemplates]="{ impact: impactCell, confidence: confidenceCell }" />
+    <app-panel title="Order Value Anomalies">
+      <app-data-table [columns]="anomalyColumns" [rows]="recentAnomalies()" [cellTemplates]="{ impact: impactCell, confidence: confidenceCell }" />
     </app-panel>
   </div>
 </div>

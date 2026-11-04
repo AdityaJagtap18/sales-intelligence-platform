@@ -20,6 +20,39 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.9.0] — Phase 9 completed: Business Intelligence (dashboards, anomaly detection)
+
+### Added
+- `com.nexora.platform.analytics`: `AnalyticsService`/`AnalyticsController`
+  querying `workspace.gold.*` directly via the existing `DatabricksSqlClient`
+  — no new JDBC driver or Databricks access path. `GET /analytics/sales-summary`,
+  `/revenue-trend`, `/revenue-by-category`, `/revenue-by-top-customers`,
+  `/anomalies`, `/orders`, `/products`.
+- Z-score anomaly detection (`(value - mean) / stdDev`, threshold `1.3`)
+  computed over per-order totals in Spring Boot — the "simple statistical
+  method, no new ML dependency" the Phase 9 kickoff asked for. Pivoted from
+  a per-date basis after discovering all 32 sample orders share one
+  `Order_Date`, which would make a date-based trend a single zero-variance
+  point.
+- Angular: `AnalyticsApiService`; Executive Overview fully de-mocked (KPIs,
+  trend chart, bar chart, donut, anomalies table all live, "Mock data"
+  badge replaced with "Live — workspace.gold.* via Databricks", fabricated
+  AI Insight panel replaced with a real Top Anomaly panel); two more real
+  pages, `/analytics/sales-explorer` and `/analytics/products`, replacing
+  their Phase 2 placeholders.
+
+### Fixed
+- `AnalyticsService.salesSummary()` queried the revenue-by-category SQL
+  twice (once for percentages, once for the top category's raw dollar
+  figure) — now queries it once and reads the already-sorted first row.
+- Executive Overview's revenue-trend chart showed all 32 order-number
+  x-axis labels with none marked `showLabel: false`, forcing the chart's
+  flex label row (and the whole page) to overflow horizontally and pushing
+  the Top Anomaly panel off-screen — fixed by thinning the labels shown to
+  the first, last, and every Nth point.
+
+---
+
 ## [0.8.0] — Phase 8 completed: Prompt Library & AI (CRUD, playground, evaluation)
 
 ### Added

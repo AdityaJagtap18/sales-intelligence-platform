@@ -1,0 +1,13 @@
+<div class="product-page">
+  <app-panel title="Product Analytics" subtitle="Top 20 products by revenue, from workspace.gold.salesorderdetail + product.">
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <h4>Top 8 by Revenue Share</h4>
+    <app-horizontal-bar-chart [data]="topProductsChart" />
+
+    <h4>All Products</h4>
+    <app-data-table [columns]="columns" [rows]="rows" emptyMessage="No product sales data yet." />
+  </app-panel>
+</div>

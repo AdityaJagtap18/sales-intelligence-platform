@@ -31,9 +31,17 @@ export const routes: Routes = [
       { path: 'overview/sales-dashboard', ...placeholder({ title: 'Sales Dashboard', description: 'Interactive sales performance dashboards against real Gold-layer data.', icon: 'bar-chart', phase: 'Phase 9 — Business Intelligence' }) },
       { path: 'overview/reports', ...placeholder({ title: 'Reports', description: 'Saved and scheduled business reports.', icon: 'file-text', phase: 'Phase 9 — Business Intelligence' }) },
 
-      { path: 'analytics/sales-explorer', ...placeholder({ title: 'Sales Explorer', description: 'Ad-hoc exploration of sales data across dimensions.', icon: 'compass', phase: 'Phase 9 — Business Intelligence' }) },
+      {
+        path: 'analytics/sales-explorer',
+        loadComponent: () => import('./features/analytics/sales-explorer.component').then((m) => m.SalesExplorerComponent),
+        data: { title: 'Sales Explorer' },
+      },
       { path: 'analytics/customers', ...placeholder({ title: 'Customer Analytics', description: 'Customer segmentation and purchasing behavior.', icon: 'users', phase: 'Phase 9 — Business Intelligence' }) },
-      { path: 'analytics/products', ...placeholder({ title: 'Product Analytics', description: 'Product and category performance.', icon: 'box', phase: 'Phase 9 — Business Intelligence' }) },
+      {
+        path: 'analytics/products',
+        loadComponent: () => import('./features/analytics/product-analytics.component').then((m) => m.ProductAnalyticsComponent),
+        data: { title: 'Product Analytics' },
+      },
       { path: 'analytics/forecasting', ...placeholder({ title: 'Forecasting', description: 'AI-assisted revenue and demand forecasting.', icon: 'trending-up', phase: 'Phase 9 — Business Intelligence' }) },
       { path: 'analytics/anomaly-detection', ...placeholder({ title: 'Anomaly Detection', description: 'Investigate detected anomalies across business metrics.', icon: 'alert-triangle', phase: 'Phase 9 — Business Intelligence' }) },
 

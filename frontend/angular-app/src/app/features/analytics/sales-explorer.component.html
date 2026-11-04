@@ -1,0 +1,25 @@
+<div class="explorer-page">
+  <app-panel title="Sales Explorer" subtitle="Every order in workspace.gold.salesorderheader, live from Databricks.">
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    @if (summary(); as s) {
+      <div class="kpi-row">
+        <app-kpi-card label="Total Revenue" [value]="'$' + (s.totalRevenue | number: '1.0-0')" icon="database" deltaLabel="all orders" trend="flat" />
+        <app-kpi-card label="Orders" [value]="s.totalOrders + ''" icon="trending-up" deltaLabel="in Gold layer" trend="flat" />
+        <app-kpi-card label="Avg. Order Value" [value]="'$' + (s.avgOrderValue | number: '1.0-0')" icon="box" deltaLabel="per order" trend="flat" />
+      </div>
+    }
+
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Search by order # or customer..."
+      [(ngModel)]="search"
+      [ngModelOptions]="{ standalone: true }"
+    />
+
+    <app-data-table [columns]="columns" [rows]="rows" emptyMessage="No orders match this search." />
+  </app-panel>
+</div>
