@@ -6,6 +6,11 @@ frontend/**/.angular/
 # Java / Maven
 backend/**/target/
 
+# Python
+backend/**/.venv/
+backend/**/__pycache__/
+*.pyc
+
 # Env
 .env
 *.local

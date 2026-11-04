@@ -20,6 +20,36 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.4.0] — Phase 4 completed: Databricks pipeline (Bronze/Silver/Gold)
+
+### Added
+- `backend/python-worker/extract_to_databricks.py`: local extraction of all 10 `SalesLT`
+  tables from the SQL Server source container (via `python-tds`, chosen to avoid native
+  ODBC driver installation) to Parquet, uploaded to the Unity Catalog volume
+  `workspace.nexora.raw_uploads` via the Databricks Files API.
+- `databricks/notebooks/01_bronze_ingest.py`, `02_silver_transform.py`,
+  `03_gold_transform.py`: adapted Bronze→Silver→Gold notebooks running entirely on
+  Databricks against Unity Catalog, per ADR-005. Silver adds the real data quality checks
+  the original pipeline never had — primary-key null checks, full-row duplicate detection,
+  foreign-key referential-integrity checks, and freshness — persisted to
+  `workspace.nexora.data_quality_report` rather than just printed.
+- `backend/python-worker/deploy_notebooks.py`: uploads the notebooks to the Databricks
+  workspace and creates/updates a 3-task sequential job (`nexora-bronze-silver-gold`).
+- Verified end-to-end: a triggered job run completes successfully and all 10
+  `workspace.gold.*` Delta tables are queryable from the SQL Warehouse with correct row
+  counts and column renaming; the data quality report shows 32 PASS / 2 SKIPPED / 0 FAIL.
+
+### Fixed
+- Workspace Import API returned 404 on first use — it does not auto-create nested parent
+  directories; `deploy_notebooks.py` now calls `workspace/mkdirs` on the parent directory
+  before `workspace/import`.
+- SQL Server `uniqueidentifier` columns (e.g. `rowguid`) came back from `python-tds` as
+  `uuid.UUID` objects; pyarrow wrote these as a Parquet `UUID` logical type that Spark's
+  reader rejects (`PARQUET_TYPE_ILLEGAL`). Fixed by stringifying UUID-valued columns before
+  writing Parquet.
+
+---
+
 ## [0.3.1] — Phase 3 completed: Databricks connectivity + architecture pivot
 
 ### Changed
