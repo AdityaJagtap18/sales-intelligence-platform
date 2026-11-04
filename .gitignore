@@ -1,0 +1,11 @@
+# Node / Angular
+node_modules/
+frontend/**/dist/
+frontend/**/.angular/
+
+# Java / Maven
+backend/**/target/
+
+# Env
+.env
+*.local

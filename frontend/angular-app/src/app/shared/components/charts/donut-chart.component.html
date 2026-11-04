@@ -1,0 +1,32 @@
+<div class="donut-wrap">
+  <svg viewBox="0 0 36 36" class="donut">
+    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--color-surface-card-hover)" stroke-width="3.6" />
+    @for (seg of segments; track seg.label) {
+      <circle
+        cx="18"
+        cy="18"
+        r="15.9155"
+        fill="none"
+        [attr.stroke]="seg.color"
+        stroke-width="3.6"
+        [attr.stroke-dasharray]="seg.dashArray"
+        [attr.stroke-dashoffset]="seg.dashOffset"
+        transform="rotate(-90 18 18)"
+      />
+    }
+  </svg>
+  <div class="donut-center">
+    <span class="donut-center-value">{{ centerValue }}</span>
+    <span class="donut-center-label">{{ centerLabel }}</span>
+  </div>
+</div>
+
+<ul class="donut-legend">
+  @for (seg of segments; track seg.label) {
+    <li>
+      <span class="dot" [style.background]="seg.color"></span>
+      <span class="legend-label">{{ seg.label }}</span>
+      <span class="legend-value">{{ seg.pct.toFixed(1) }}%</span>
+    </li>
+  }
+</ul>

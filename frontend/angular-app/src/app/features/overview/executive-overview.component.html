@@ -1,0 +1,81 @@
+<div class="page">
+  <div class="page-toolbar">
+    <app-badge tone="warning">
+      <app-icon name="alert-triangle" [size]="12" />
+      Mock data — Phase 2 shell, no live pipeline yet
+    </app-badge>
+    <app-filter-bar dateRangeLabel="May 1 – May 31, 2026" />
+  </div>
+
+  <div class="kpi-grid">
+    @for (kpi of kpis; track kpi.label) {
+      <app-kpi-card
+        [label]="kpi.label"
+        [value]="kpi.value"
+        [icon]="kpi.icon"
+        [deltaLabel]="kpi.deltaLabel"
+        [trend]="kpi.trend"
+        [positiveIsGood]="kpi.positiveIsGood"
+        [sparkline]="kpi.sparkline"
+      />
+    }
+  </div>
+
+  <div class="main-grid">
+    <app-panel title="Revenue Over Time" subtitle="Actual revenue vs. expected baseline, with anomaly markers">
+      <app-area-line-chart [points]="revenueSeries" />
+    </app-panel>
+
+    <app-panel title="AI Insight" [accent]="true">
+      <div panelActions>
+        <app-badge tone="accent">High Impact</app-badge>
+      </div>
+      <h4 class="insight-title">{{ aiInsight.title }}</h4>
+      <p class="insight-body">{{ aiInsight.body }}</p>
+
+      <div class="factor-list">
+        @for (f of aiInsight.factors; track f.label) {
+          <div class="factor-row">
+            <div class="factor-top">
+              <span>{{ f.label }}</span>
+              <span class="factor-delta">{{ f.delta }}</span>
+            </div>
+            <div class="factor-track">
+              <div class="factor-fill" [style.width.%]="f.weight"></div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="confidence-row">
+        <span>AI Confidence</span>
+        <span class="confidence-value">{{ aiInsight.confidence }}%</span>
+      </div>
+      <div class="factor-track">
+        <div class="factor-fill" [style.width.%]="aiInsight.confidence"></div>
+      </div>
+    </app-panel>
+  </div>
+
+  <div class="secondary-grid">
+    <app-panel title="Revenue by Channel">
+      <app-horizontal-bar-chart [data]="revenueByChannel" />
+    </app-panel>
+
+    <app-panel title="Users by Segment">
+      <app-donut-chart [data]="usersBySegment" centerLabel="Total users" centerValue="1,236" />
+    </app-panel>
+
+    <app-panel title="Recent Anomalies">
+      <app-data-table [columns]="anomalyColumns" [rows]="recentAnomalies" [cellTemplates]="{ impact: impactCell, confidence: confidenceCell }" />
+    </app-panel>
+  </div>
+</div>
+
+<ng-template #impactCell let-row>
+  <app-badge [tone]="impactTone(row.impact)">{{ row.impact }}</app-badge>
+</ng-template>
+
+<ng-template #confidenceCell let-row>
+  <app-badge tone="neutral">{{ row.confidence }}%</app-badge>
+</ng-template>

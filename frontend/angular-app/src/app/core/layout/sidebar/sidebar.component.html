@@ -1,0 +1,41 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <div class="brand">
+    <div class="brand-mark">N</div>
+    @if (!collapsed) {
+      <span class="brand-name">NEXORA AI</span>
+    }
+  </div>
+
+  <nav class="nav">
+    @for (group of groups; track group.label) {
+      <div class="nav-group">
+        @if (!collapsed) {
+          <div class="nav-group-label">{{ group.label }}</div>
+        }
+        @for (item of group.items; track item.path) {
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [title]="collapsed ? item.label : ''"
+          >
+            <app-icon [name]="item.icon" [size]="18" />
+            @if (!collapsed) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+            @if (!collapsed && item.badge) {
+              <span class="nav-badge">{{ item.badge }}</span>
+            }
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <button class="collapse-btn" type="button" (click)="toggle()">
+    <app-icon [name]="collapsed ? 'chevron-right' : 'chevron-left'" [size]="16" />
+    @if (!collapsed) {
+      <span>Collapse</span>
+    }
+  </button>
+</aside>

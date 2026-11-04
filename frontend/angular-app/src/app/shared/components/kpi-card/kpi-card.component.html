@@ -1,0 +1,24 @@
+<div class="kpi-card">
+  <div class="kpi-top">
+    <div class="kpi-icon">
+      <app-icon [name]="icon" [size]="16" />
+    </div>
+    <span class="kpi-label">{{ label }}</span>
+  </div>
+
+  <div class="kpi-mid">
+    <span class="kpi-value">{{ value }}</span>
+    @if (sparkline.length) {
+      <svg class="kpi-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <polyline [attr.points]="sparklinePoints" fill="none" stroke="var(--color-accent)" stroke-width="2" />
+      </svg>
+    }
+  </div>
+
+  @if (deltaLabel) {
+    <div class="kpi-delta" [class]="'tone-' + trendTone">
+      <app-icon [name]="trend === 'down' ? 'trending-down' : 'trending-up'" [size]="13" />
+      <span>{{ deltaLabel }}</span>
+    </div>
+  }
+</div>

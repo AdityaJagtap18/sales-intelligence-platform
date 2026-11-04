@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "angular-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--", "--port", "4200"],
+      "cwd": "frontend/angular-app",
+      "port": 4200
+    },
+    {
+      "name": "spring-boot-api",
+      "runtimeExecutable": "backend/spring-boot-api/mvnw.cmd",
+      "runtimeArgs": ["spring-boot:run"],
+      "cwd": "backend/spring-boot-api",
+      "port": 8080
+    }
+  ]
+}

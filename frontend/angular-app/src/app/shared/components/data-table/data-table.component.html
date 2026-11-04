@@ -1,0 +1,28 @@
+<table class="data-table">
+  <thead>
+    <tr>
+      @for (col of columns; track col.key) {
+        <th [class]="'align-' + (col.align ?? 'left')">{{ col.label }}</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows; track row) {
+      <tr>
+        @for (col of columns; track col.key) {
+          <td [class]="'align-' + (col.align ?? 'left')">
+            @if (cellTemplates[col.key]) {
+              <ng-container *ngTemplateOutlet="cellTemplates[col.key]; context: { $implicit: row }" />
+            } @else {
+              {{ row[col.key] }}
+            }
+          </td>
+        }
+      </tr>
+    } @empty {
+      <tr>
+        <td [attr.colspan]="columns.length" class="empty-row">{{ emptyMessage }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

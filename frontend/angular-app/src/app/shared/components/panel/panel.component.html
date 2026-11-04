@@ -1,0 +1,18 @@
+<section class="panel" [class.accent]="accent">
+  @if (title) {
+    <header class="panel-header">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ title }}</h3>
+        @if (subtitle) {
+          <app-icon name="help-circle" [size]="14" class="panel-info" [attr.title]="subtitle" />
+        }
+      </div>
+      <div class="panel-actions">
+        <ng-content select="[panelActions]" />
+      </div>
+    </header>
+  }
+  <div class="panel-body">
+    <ng-content />
+  </div>
+</section>

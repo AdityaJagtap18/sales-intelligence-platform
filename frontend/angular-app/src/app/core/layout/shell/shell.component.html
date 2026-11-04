@@ -1,0 +1,9 @@
+<div class="shell">
+  <app-sidebar [collapsed]="collapsed()" (collapsedChange)="collapsed.set($event)" />
+  <div class="shell-main">
+    <app-topbar [pageTitle]="pageTitle()" />
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
