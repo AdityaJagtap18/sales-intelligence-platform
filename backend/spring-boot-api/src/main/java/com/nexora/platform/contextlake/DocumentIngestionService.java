@@ -38,7 +38,11 @@ public class DocumentIngestionService {
 
     public DocumentDto ingest(MultipartFile file) {
         String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
-        String objectKey = UUID.randomUUID() + "-" + file.getOriginalFilename();
+        // Strip path separators from the user-supplied filename before using it
+        // in the MinIO object key, so an uploaded name like "../x" or "a/b"
+        // can't produce an unexpectedly nested or traversal-like key.
+        String safeFilename = sanitizeFilename(file.getOriginalFilename());
+        String objectKey = UUID.randomUUID() + "-" + safeFilename;
         Document document = new Document(file.getOriginalFilename(), objectKey, contentType, file.getSize(),
                 Instant.now());
         document = repository.save(document);
@@ -74,5 +78,12 @@ public class DocumentIngestionService {
             document.markFailed(e.getMessage());
             return DocumentDto.from(repository.save(document));
         }
+    }
+
+    private static String sanitizeFilename(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return "upload";
+        }
+        return filename.replaceAll("[/\\\\]+", "_");
     }
 }

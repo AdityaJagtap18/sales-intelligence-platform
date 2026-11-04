@@ -18,7 +18,7 @@ changed the scope of Phases 3–5 from the original all-local plan; see ADR-005 
 | 7 | Knowledge Graph (Neo4j schema, sync, Graph Explorer UI) | ✅ done — `backend/spring-boot-api` (graph package), `frontend/angular-app` (Knowledge Graph/Graph Explorer pages) |
 | 8 | Prompt Library & AI (CRUD, versioning, playground, Ollama, evaluation) | ✅ done — `backend/spring-boot-api` (prompts package), `frontend/angular-app` (Prompt Library/Prompt Playground pages) |
 | 9 | Business Intelligence (dashboards against real Gold data via Databricks SQL Warehouse, forecasting, anomaly detection, AI insights) | ✅ done — `backend/spring-boot-api` (analytics package), `frontend/angular-app` (Executive Overview/Sales Explorer/Product Analytics pages) |
-| 10 | Production validation (tests, security review, deployment docs) | ▶ next |
+| 10 | Production validation (tests, security review, deployment docs) | ✅ done — `backend/spring-boot-api/src/test`, `frontend/angular-app/src/app/**/*.spec.ts`, `docs/implementation/phase-10-security-review.md`, `docs/implementation/deployment-guide.md` |
 | Future | Azure redeployment | ⏳ (explicitly out of local MVP) |
 
 ## Dependency matrix
@@ -113,9 +113,48 @@ Built `frontend/angular-app` (Angular 18 standalone, NEXORA design tokens in `sr
 
 **Verified end-to-end**: curl against every new endpoint matched a manual Gold-layer spot check (`sales-summary`: $956,303.59 revenue, 32 orders, $29,884.49 avg order, 847 customers, 295 products, top category "Touring Bikes" at 23.07%; `anomalies`: 6 real outlier orders from High to Low impact; `revenue-by-category`: 26 categories summing to ~100%). Confirmed live in the browser on all three pages — Executive Overview's KPIs/trend/anomaly panel/bar chart/donut/table, Sales Explorer's searchable order list, and Product Analytics' top-8 chart and full table all match the curl output exactly, with no mock data and no layout overflow.
 
-## Immediate next step (Phase 10 kickoff prompt)
+## Phase 10 — completed
 
-> Production validation: this is the final local-MVP phase before any Azure redeployment work (spec §11, explicitly out of scope until this is done). Add real automated test coverage where there is currently none — unit tests for the aggregation/statistical logic that's grown across Phases 5–9 (`AnalyticsService`'s z-score/mean/stdDev math, `PipelineRunService`, `CatalogSyncService`, `GraphSyncService`'s constraint/sync logic, `PromptService`'s template rendering), and at least a couple of `@SpringBootTest`/`MockMvc` integration tests against the controllers added in those phases. Do a security review of the whole stack built so far: confirm no Databricks/MinIO/Qdrant/Ollama/Neo4j/Postgres credential ever reaches Angular (grep network responses, not just code), check CORS is still scoped to local dev origins only, check SQL built from user input anywhere (the `DatabricksSqlClient`/`CatalogSyncService` dynamic `UNION ALL` queries are internal-only today — confirm nothing added since accepts unsanitized input into a query), and check secrets management (`.env`, `docker-compose.yml`) isn't committing anything it shouldn't. Write deployment docs: how to stand up the full local stack from a clean clone (Docker Compose services, `.env` setup, Databricks Free Edition prerequisites, the SQL Server restore step, the notebook deploy step, the model pulls for Ollama) — something a new engineer could follow end-to-end without tribal knowledge. Exit criteria: a test suite that runs clean (`mvnw test`, `ng test`), a written security review noting what was checked and what (if anything) was found and fixed, and a deployment doc that's actually been followed once from a clean state.
+**Tests**: added real unit coverage for the aggregation/statistical logic that had grown
+across Phases 5-9 with no tests at all — `AnalyticsServiceTest` (z-score/mean/stdDev math,
+including the zero-stdDev and confidence-cap edge cases), `PromptServiceTest` (template
+`{{input}}` substitution vs. append-fallback, failed-generation handling), `PipelineRunServiceTest`
+(terminal-state skip logic), `CatalogSyncServiceTest` (create-vs-update upsert behavior,
+empty-catalog no-op). Added `@WebMvcTest`/`MockMvc` integration tests for `AnalyticsController`,
+`PromptController` (including bean-validation 400s), and `PipelineController` (404 mapping).
+On the Angular side, added specs for `AnalyticsApiService` (HTTP contract via
+`HttpClientTestingModule`) and the pure-logic getters in `ExecutiveOverviewComponent`
+(including a regression test locking in the label-thinning fix from Phase 9),
+`ProductAnalyticsComponent`, and `SalesExplorerComponent`. `mvnw test` (30 tests) and
+`ng test --browsers=ChromeHeadless` (14 tests) both run clean.
+
+**Fixed along the way**: `SpringBootApiApplicationTests` (the Phase 2 smoke test) was
+silently broken for anyone running it on the host rather than inside Docker —
+`application.properties`'s Postgres fallback port (`5432`) didn't match `.env.example`'s
+actual mapped port (`5434`), so it connected to whatever else was listening on 5432 instead
+of the Compose Postgres. Fixed the fallback; documented the failure mode in the deployment
+guide's troubleshooting section in case another host hits the same thing.
+
+**Security review** (`docs/implementation/phase-10-security-review.md`): checked credential
+isolation (confirmed via live `/actuator/health` and `/actuator/env` calls, not just code
+reading), CORS scope, every dynamic-SQL call site for an injection path from user input
+(found none — the one path-variable-driven case, `LineageService.lineageFor`, validates
+against a fixed table allowlist before the value ever reaches a query string), and secrets
+management (`.env` never committed, no real credential has a fallback default). Found and
+fixed one real issue: `DocumentIngestionService` built MinIO object keys directly from
+unsanitized user-supplied filenames — fixed by stripping path separators.
+
+**Deployment docs** (`docs/implementation/deployment-guide.md`): a clean-clone walkthrough —
+Docker Compose stack, Databricks Free Edition setup, the SQL Server restore step, the
+extract/upload/deploy-notebooks pipeline bootstrap, the Ollama model pulls, running both
+test suites, and a troubleshooting section for the Postgres-port issue found above.
+
+## Immediate next step
+
+Phase 10 was the last phase of the local MVP (spec §11). Per the "Open assumptions" below,
+no Azure work starts until this point — that's now reached. The next step is the user's
+call: either begin scoping the Azure redeployment phase, or treat the local MVP as feature-
+complete and move to a different priority.
 
 ## Open assumptions (flag if wrong, otherwise proceeding)
 

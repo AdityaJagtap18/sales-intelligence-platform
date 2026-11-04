@@ -20,6 +20,37 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.0.0] — Phase 10 completed: Production validation (local MVP complete)
+
+### Added
+- Backend unit tests: `AnalyticsServiceTest`, `PromptServiceTest`,
+  `PipelineRunServiceTest`, `CatalogSyncServiceTest` — covering logic that
+  had no automated coverage since Phases 5-9 (z-score/anomaly math, prompt
+  template rendering, pipeline run state transitions, catalog upsert
+  behavior).
+- Backend `@WebMvcTest`/`MockMvc` integration tests: `AnalyticsControllerTest`,
+  `PromptControllerTest`, `PipelineControllerTest`.
+- Angular unit tests: `AnalyticsApiService`, and the pure-logic getters in
+  `ExecutiveOverviewComponent`, `ProductAnalyticsComponent`,
+  `SalesExplorerComponent` — including a regression test for the Phase 9
+  chart-label-overflow fix.
+- `docs/implementation/phase-10-security-review.md`: credential isolation,
+  CORS scope, SQL-injection surface, and secrets-management review.
+- `docs/implementation/deployment-guide.md`: a clean-clone-to-running-stack
+  walkthrough (Databricks setup, SQL Server restore, pipeline deploy,
+  Ollama model pulls, running both test suites).
+
+### Fixed
+- `DocumentIngestionService` built MinIO object keys directly from
+  unsanitized user-supplied filenames — now strips path separators first.
+- `application.properties`'s Postgres datasource fallback hardcoded port
+  `5432`, which didn't match `.env.example`'s actual mapped port (`5434`)
+  — broke `SpringBootApiApplicationTests` (and any host-side
+  `spring-boot:run`) whenever something else locally was listening on
+  5432. Fixed the fallback to match `.env.example`.
+
+---
+
 ## [0.9.0] — Phase 9 completed: Business Intelligence (dashboards, anomaly detection)
 
 ### Added
