@@ -18,9 +18,34 @@ The current version is tracked in [VERSION](VERSION).
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] — Phase 3: Local Infrastructure
+
 ### Added
-- Phase 3 local infrastructure (Docker Compose): PostgreSQL, MinIO, Neo4j, Qdrant, Ollama,
-  OpenTelemetry Collector, Prometheus, Grafana.
+- `docker-compose.yml`: PostgreSQL, MinIO, Neo4j, Qdrant, Ollama, OpenTelemetry Collector,
+  Prometheus, and Grafana, all with persistent named volumes and health checks.
+- `.env.example` documenting every configurable port/credential/bucket name.
+- `backend/spring-boot-api/Dockerfile` (multi-stage Maven build) so the API builds and runs
+  inside the same Compose stack as its dependencies.
+- Re-enabled the Spring Boot datasource/JPA autoconfiguration (disabled in Phase 2 since no
+  Postgres existed) now pointed at the Compose Postgres via env vars; added
+  `micrometer-registry-prometheus` and exposed `/api/actuator/prometheus` for scraping.
+- Prometheus config scraping the OTel Collector, itself, and the Spring Boot API; Grafana
+  provisioned with the Prometheus datasource (no dashboards yet — Phase 5).
+- `docs/architecture/local-deployment.md` documenting ports, a known MinIO image
+  substitution, and verified Phase 3 exit criteria.
+
+### Changed
+- **MinIO image substitution**: `minio/minio` was pulled from Docker Hub behind a login wall
+  in 2025 (MinIO's licensing change). Switched to `bitnamilegacy/minio`, a frozen but free,
+  unauthenticated, S3-API-compatible replacement, with `MINIO_DEFAULT_BUCKETS` creating the
+  default bucket on first boot.
+
+### Verified
+- All 9 containers report healthy; Spring Boot's `/health` confirms a live Postgres
+  connection; Prometheus reports all 3 scrape targets `health: up`; MinIO, Neo4j, Qdrant,
+  Ollama, and Grafana are each independently reachable from the host.
 
 ---
 

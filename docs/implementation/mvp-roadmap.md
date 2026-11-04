@@ -6,8 +6,8 @@ Status legend: ✅ done · ▶ next · ⏳ not started
 |---|---|---|
 | 1 | Project discovery & repository assessment | ✅ done (this set of docs) |
 | 2 | Application foundation & design system (Angular shell, Spring Boot skeleton, NEXORA design tokens, nav, Executive Overview shell) | ✅ done — `frontend/angular-app`, `backend/spring-boot-api` |
-| 3 | Local infrastructure (Docker Compose: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana) | ▶ next |
-| 4 | Core data engineering (AdventureWorksLT2022 local source, Bronze/Silver/Gold ported to MinIO+Delta, data quality checks) | ⏳ |
+| 3 | Local infrastructure (Docker Compose: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana) | ✅ done — `docker-compose.yml`, `docs/architecture/local-deployment.md` |
+| 4 | Core data engineering (AdventureWorksLT2022 local source, Bronze/Silver/Gold ported to MinIO+Delta, data quality checks) | ▶ next |
 | 5 | Pipeline management & observability (registry, execution API, run history, logs/metrics/traces, alerts) | ⏳ |
 | 6 | Context Lake (dataset registry, metadata catalog, document ingestion, semantic search, lineage) | ⏳ |
 | 7 | Knowledge Graph (Neo4j schema, sync, Graph Explorer UI) | ⏳ |
@@ -34,9 +34,13 @@ Status legend: ✅ done · ▶ next · ⏳ not started
 
 Built `frontend/angular-app` (Angular 18 standalone, NEXORA design tokens in `src/styles.scss`, collapsible sidebar + topbar, full §6 nav tree with lazy placeholder pages for every unbuilt module, reusable KPI card / panel / badge / data table / filter bar / area-line / bar / donut chart components) and `backend/spring-boot-api` (Spring Boot 4, actuator health/info, dev CORS for `localhost:4200`, JPA/datasource autoconfig deliberately disabled until Phase 3 provides a real Postgres). Executive Overview renders on mock data with a visible "Mock data" badge. Verified in-browser against Image 1 — shell, KPI cards, anomaly chart, AI insight panel, donut/bar charts, and sidebar collapse all match. `ng build` and `mvnw compile` both pass clean.
 
-## Immediate next step (Phase 3 kickoff prompt)
+## Phase 3 — completed
 
-> Stand up local infrastructure via Docker Compose: PostgreSQL, MinIO, Neo4j, Qdrant, Ollama, and the observability trio (OpenTelemetry collector, Prometheus, Grafana). Deliverables: `docker-compose.yml` at the repo root plus per-service config under `infrastructure/`; persistent named volumes for every stateful service; health checks; a `.env.example` documenting every required variable (ports, credentials, bucket/database names); and a startup order that respects dependencies (e.g., app services wait on Postgres/MinIO health). Re-enable the Spring Boot datasource/JPA autoconfiguration now that a real Postgres exists, and point it at the Compose Postgres via env vars. Exit criteria: `docker compose up` brings up every service healthy, Spring Boot connects to Postgres on startup, and MinIO/Neo4j/Qdrant/Ollama are each reachable from the host on their documented ports — all without any Azure dependency, per ADR-001.
+Stood up the full local stack via `docker-compose.yml`: Postgres, MinIO (substituted `bitnamilegacy/minio` for the now-gated `minio/minio` — see `docs/architecture/local-deployment.md`), Neo4j, Qdrant, Ollama, OTel Collector, Prometheus, and Grafana, all with persistent volumes and health checks. Re-enabled Spring Boot's datasource/JPA autoconfiguration against the Compose Postgres and exposed `/api/actuator/prometheus`. Verified live: all 9 containers healthy, Spring Boot's health check confirms a real DB connection, and Prometheus is actively scraping all 3 targets.
+
+## Immediate next step (Phase 4 kickoff prompt)
+
+> Build core data engineering: seed AdventureWorksLT2022 locally (public Microsoft sample scripts, run against a local SQL Server container or directly loaded into the Bronze layer — decide based on what's actually simplest, don't stand up a SQL Server service if the Bronze loader can read the sample data files directly), then port the existing Bronze→Silver→Gold notebook logic (date normalization, PascalCase→underscore renaming — see `docs/discovery/repository-assessment.md`) into a Python worker using PySpark + Delta Lake against MinIO (`s3a://` in place of the old `abfss://` mount), preserving the same `bronze/SalesLT/{table}/...` → `Silver/...` → `gold/...` key layout. Add real data quality checks in the Silver step that the original notebooks never had (nulls, duplicates, referential integrity, freshness — per master-spec Module C) since that's explicitly called out as a gap, not a rewrite of working logic. Exit criteria: running the worker against the seeded source produces real Gold-layer Delta tables in MinIO for all AdventureWorksLT2022 `SalesLT` tables, with a data-quality report (even a simple one) for at least the Silver step, and nothing in this phase touches Spring Boot's control-plane role per `docs/architecture/system-architecture.md`.
 
 ## Open assumptions (flag if wrong, otherwise proceeding)
 
