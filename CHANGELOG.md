@@ -20,6 +20,33 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.8.0] — Phase 8 completed: Prompt Library & AI (CRUD, playground, evaluation)
+
+### Added
+- `com.nexora.platform.prompts`: `Prompt`/`PromptVersion`/`PromptRun` JPA
+  entities (`schema.sql`-defined tables, same pattern as `pipeline_run`/
+  `catalog_dataset`/`document`). A template's `{{input}}` placeholder is
+  filled from the Playground's input at run time.
+- `OllamaChatClient`: a second call (`/api/generate`, non-streaming) against
+  the existing `ollamaRestClient` bean/`OllamaProperties` from Context Lake
+  (Phase 6) — not a new client. Pulled `llama3.2:1b` into the existing
+  `ollama` container alongside `nomic-embed-text`.
+- `PromptController`: `GET/POST /prompts`, `GET /prompts/{id}`,
+  `POST /prompts/{id}/versions`, `GET /prompts/{id}/runs`,
+  `POST /prompts/{id}/run`, `PUT /prompts/runs/{runId}/rating`.
+- Angular: `/intelligence/prompt-library` (create/version prompts) and
+  `/intelligence/prompt-playground` (run against the real local model, rate
+  the result, run history, preselect a prompt via `?promptId=`) — replacing
+  their Phase 2 placeholders.
+
+### Verified
+- Created a prompt, ran it against the real local Ollama model, added a
+  second version, and rated a run — via curl first, then reproduced exactly
+  live in the browser, including the Library-to-Playground preselect link
+  and the run-history rating update.
+
+---
+
 ## [0.7.0] — Phase 7 completed: Knowledge Graph (Neo4j sync, Graph Explorer)
 
 ### Added

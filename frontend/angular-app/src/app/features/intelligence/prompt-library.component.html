@@ -1,0 +1,84 @@
+<div class="library-page">
+  <app-panel title="Prompt Library" subtitle="Create and version reusable prompts, then run them in the Playground.">
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <div class="library-grid">
+      <div class="prompt-list">
+        @for (prompt of prompts(); track prompt.id) {
+          <button
+            type="button"
+            class="prompt-row"
+            [class.active]="selectedPrompt()?.id === prompt.id"
+            (click)="select(prompt.id)"
+          >
+            <div class="prompt-row-name">{{ prompt.name }}</div>
+            <div class="prompt-row-meta">v{{ prompt.latestVersionNumber }} &middot; {{ prompt.createdAt | date: 'short' }}</div>
+          </button>
+        } @empty {
+          <p class="loading-text">No prompts yet — create one below.</p>
+        }
+      </div>
+
+      <div class="prompt-detail">
+        @if (selectedPrompt(); as detail) {
+          <h3>{{ detail.name }}</h3>
+          @if (detail.description) {
+            <p class="prompt-description">{{ detail.description }}</p>
+          }
+
+          <a class="playground-link" [routerLink]="['/intelligence/prompt-playground']" [queryParams]="{ promptId: detail.id }">
+            <app-icon name="terminal" [size]="14" />
+            Open in Playground
+          </a>
+
+          <h4>Versions</h4>
+          <div class="version-list">
+            @for (version of detail.versions; track version.id) {
+              <div class="version-row">
+                <span class="version-badge">v{{ version.versionNumber }}</span>
+                <span class="version-template">{{ version.template }}</span>
+              </div>
+            }
+          </div>
+
+          <h4>Add a new version</h4>
+          <textarea
+            class="template-input"
+            rows="3"
+            [(ngModel)]="newVersionTemplate"
+            [ngModelOptions]="{ standalone: true }"
+          ></textarea>
+          <button class="primary-button" type="button" [disabled]="addingVersion()" (click)="addVersion()">
+            {{ addingVersion() ? 'Saving...' : 'Save Version' }}
+          </button>
+        } @else {
+          <p class="loading-text">Select a prompt to see its versions.</p>
+        }
+      </div>
+    </div>
+
+    <h4>New Prompt</h4>
+    <div class="new-prompt-form">
+      <input class="text-input" type="text" placeholder="Name" [(ngModel)]="newName" [ngModelOptions]="{ standalone: true }" />
+      <input
+        class="text-input"
+        type="text"
+        placeholder="Description (optional)"
+        [(ngModel)]="newDescription"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <textarea
+        class="template-input"
+        rows="3"
+        placeholder="Template — use {{ '{{input}}' }} where the Playground input should go"
+        [(ngModel)]="newTemplate"
+        [ngModelOptions]="{ standalone: true }"
+      ></textarea>
+      <button class="primary-button" type="button" [disabled]="creating()" (click)="createPrompt()">
+        {{ creating() ? 'Creating...' : 'Create Prompt' }}
+      </button>
+    </div>
+  </app-panel>
+</div>

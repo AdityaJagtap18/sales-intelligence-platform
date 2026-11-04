@@ -71,8 +71,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/intelligence/graph-explorer.component').then((m) => m.GraphExplorerComponent),
         data: { title: 'Graph Explorer' },
       },
-      { path: 'intelligence/prompt-library', ...placeholder({ title: 'Prompt Library', description: 'Create, version and organize reusable AI prompts.', icon: 'message-circle', phase: 'Phase 8 — Prompt Library & AI' }) },
-      { path: 'intelligence/prompt-playground', ...placeholder({ title: 'Prompt Playground', description: 'Execute prompts against local Ollama models.', icon: 'terminal', phase: 'Phase 8 — Prompt Library & AI' }) },
+      {
+        path: 'intelligence/prompt-library',
+        loadComponent: () => import('./features/intelligence/prompt-library.component').then((m) => m.PromptLibraryComponent),
+        data: { title: 'Prompt Library' },
+      },
+      {
+        path: 'intelligence/prompt-playground',
+        loadComponent: () => import('./features/intelligence/prompt-playground.component').then((m) => m.PromptPlaygroundComponent),
+        data: { title: 'Prompt Playground' },
+      },
       { path: 'intelligence/ai-insights', ...placeholder({ title: 'AI Insights', description: 'Grounded, source-cited AI analysis across the platform.', icon: 'lightbulb', phase: 'Phase 8 — Prompt Library & AI' }) },
 
       { path: 'observability/system-health', ...placeholder({ title: 'System Health', description: 'Infrastructure and service health overview.', icon: 'heart', phase: 'Phase 5 — Pipeline Management & Observability' }) },

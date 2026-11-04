@@ -1,0 +1,82 @@
+<div class="playground-page">
+  <app-panel title="Prompt Playground" subtitle="Run a prompt version against the local Ollama model, then rate the result.">
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <div class="controls">
+      <label class="control">
+        <span>Prompt</span>
+        <select [value]="selectedPromptId()" (change)="onPromptChange($any($event.target).value)">
+          @for (prompt of prompts(); track prompt.id) {
+            <option [value]="prompt.id">{{ prompt.name }}</option>
+          }
+        </select>
+      </label>
+
+      @if (selectedPrompt(); as detail) {
+        <label class="control">
+          <span>Version</span>
+          <select [value]="selectedVersionId()" (change)="onVersionChange($any($event.target).value)">
+            @for (version of detail.versions; track version.id) {
+              <option [value]="version.id">v{{ version.versionNumber }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+
+    @if (selectedVersionTemplate) {
+      <div class="template-preview">{{ selectedVersionTemplate }}</div>
+    }
+
+    <textarea
+      class="input-box"
+      rows="3"
+      placeholder="Input text — fills the {{ '{{input}}' }} placeholder in the template"
+      [(ngModel)]="input"
+      [ngModelOptions]="{ standalone: true }"
+    ></textarea>
+
+    <button class="run-button" type="button" [disabled]="running() || !selectedPromptId()" (click)="run()">
+      {{ running() ? 'Running...' : 'Run' }}
+    </button>
+
+    @if (lastRun(); as run) {
+      <div class="result-card">
+        <div class="result-header">
+          <span class="result-model">{{ run.model }}</span>
+          @if (run.latencyMs !== null) {
+            <span class="result-latency">{{ run.latencyMs }} ms</span>
+          }
+          <app-badge [tone]="ratingTone(run.rating)">{{ run.rating }}</app-badge>
+        </div>
+
+        @if (run.errorMessage) {
+          <p class="error-banner">{{ run.errorMessage }}</p>
+        } @else {
+          <p class="result-output">{{ run.output }}</p>
+        }
+
+        <div class="rating-actions">
+          <button type="button" class="rate-button rate-pass" (click)="rate(run.id, 'PASS')">Mark Pass</button>
+          <button type="button" class="rate-button rate-fail" (click)="rate(run.id, 'FAIL')">Mark Fail</button>
+        </div>
+      </div>
+    }
+
+    <h4>Run History</h4>
+    <div class="history-list">
+      @for (run of runHistory(); track run.id) {
+        <div class="history-row">
+          <span class="history-version">v{{ run.versionNumber }}</span>
+          <span class="history-output">{{ run.output ?? run.errorMessage }}</span>
+          <app-badge [tone]="ratingTone(run.rating)">{{ run.rating }}</app-badge>
+          <span class="history-date">{{ run.createdAt | date: 'short' }}</span>
+        </div>
+      } @empty {
+        <p class="loading-text">No runs yet for this prompt.</p>
+      }
+    </div>
+  </app-panel>
+</div>

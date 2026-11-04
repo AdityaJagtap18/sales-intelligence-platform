@@ -33,3 +33,33 @@ CREATE TABLE IF NOT EXISTS document (
     error_message TEXT,
     uploaded_at TIMESTAMPTZ NOT NULL
 );
+
+-- Phase 8: Prompt Library & AI. A prompt has one or more versions (its
+-- template text); each playground run records which version it used.
+CREATE TABLE IF NOT EXISTS prompt (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(256) NOT NULL,
+    description VARCHAR(1024),
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS prompt_version (
+    id BIGSERIAL PRIMARY KEY,
+    prompt_id BIGINT NOT NULL REFERENCES prompt (id),
+    version_number INTEGER NOT NULL,
+    template TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    UNIQUE (prompt_id, version_number)
+);
+
+CREATE TABLE IF NOT EXISTS prompt_run (
+    id BIGSERIAL PRIMARY KEY,
+    prompt_version_id BIGINT NOT NULL REFERENCES prompt_version (id),
+    rendered_prompt TEXT NOT NULL,
+    output TEXT,
+    model VARCHAR(128) NOT NULL,
+    rating VARCHAR(16) NOT NULL,
+    latency_ms BIGINT,
+    error_message TEXT,
+    created_at TIMESTAMPTZ NOT NULL
+);
