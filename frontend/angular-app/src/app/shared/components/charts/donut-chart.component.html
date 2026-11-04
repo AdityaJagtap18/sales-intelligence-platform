@@ -23,7 +23,7 @@
 
 <ul class="donut-legend">
   @for (seg of segments; track seg.label) {
-    <li>
+    <li [class.clickable]="clickable" (click)="onClick(seg)">
       <span class="dot" [style.background]="seg.color"></span>
       <span class="legend-label">{{ seg.label }}</span>
       <span class="legend-value">{{ seg.pct.toFixed(1) }}%</span>

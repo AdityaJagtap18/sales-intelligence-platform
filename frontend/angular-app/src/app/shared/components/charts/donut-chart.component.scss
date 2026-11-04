@@ -50,6 +50,13 @@
     gap: var(--space-2);
     font-size: var(--font-size-sm);
   }
+
+  li.clickable {
+    cursor: pointer;
+  }
+  li.clickable:hover .legend-label {
+    color: var(--color-text-primary);
+  }
 }
 
 .dot {

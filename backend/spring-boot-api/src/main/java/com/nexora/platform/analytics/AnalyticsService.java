@@ -154,8 +154,9 @@ public class AnalyticsService {
             }
             String impact = Math.abs(z) > 2.0 ? "High" : Math.abs(z) > 1.6 ? "Medium" : "Low";
             int confidence = (int) Math.min(99, Math.round(Math.abs(z) * 35));
-            anomalies.add(new AnomalyRowDto("Order Value", strAt(rows.get(i), 0), impact,
-                    z > 0 ? "up" : "down", confidence));
+            String order = strAt(rows.get(i), 0);
+            anomalies.add(new AnomalyRowDto("order-value|" + order, "Order Value", order, impact,
+                    z > 0 ? "up" : "down", confidence, round2(mean), round2(value), null, null));
         }
         anomalies.sort((a, b) -> Integer.compare(b.confidence(), a.confidence()));
         return anomalies;

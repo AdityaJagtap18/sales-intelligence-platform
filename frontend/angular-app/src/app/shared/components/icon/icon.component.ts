@@ -45,6 +45,12 @@ const ICONS: Record<string, string> = {
   refresh: '<polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.5 9A9 9 0 0 0 4.6 6.3L1 10m22 4-3.6 3.7A9 9 0 0 1 3.5 15"/>',
   play: '<polygon points="6 3 20 12 6 21 6 3"/>',
   upload: '<path d="M12 16V4"/><polyline points="7 9 12 4 17 9"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  download: '<path d="M12 4v12"/><polyline points="7 11 12 16 17 11"/><path d="M4 20h16"/>',
+  x: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+  inbox: '<polyline points="4 12 9 12 10.5 15 13.5 15 15 12 20 12"/><path d="M5.5 5h13l2 7v6a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3.5 18v-6z"/>',
+  check: '<polyline points="5 13 10 18 19 7"/>',
+  'check-circle': '<circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/>',
+  send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
 };
 
 @Component({

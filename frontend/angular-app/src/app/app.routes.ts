@@ -28,22 +28,42 @@ export const routes: Routes = [
         loadComponent: () => import('./features/overview/executive-overview.component').then((m) => m.ExecutiveOverviewComponent),
         data: { title: 'Executive Overview' },
       },
-      { path: 'overview/sales-dashboard', ...placeholder({ title: 'Sales Dashboard', description: 'Interactive sales performance dashboards against real Gold-layer data.', icon: 'bar-chart', phase: 'Phase 9 — Business Intelligence' }) },
-      { path: 'overview/reports', ...placeholder({ title: 'Reports', description: 'Saved and scheduled business reports.', icon: 'file-text', phase: 'Phase 9 — Business Intelligence' }) },
+      {
+        path: 'overview/sales-dashboard',
+        loadComponent: () => import('./features/overview/sales-dashboard.component').then((m) => m.SalesDashboardComponent),
+        data: { title: 'Sales Dashboard' },
+      },
+      {
+        path: 'overview/reports',
+        loadComponent: () => import('./features/overview/reports.component').then((m) => m.ReportsComponent),
+        data: { title: 'Reports' },
+      },
 
       {
         path: 'analytics/sales-explorer',
         loadComponent: () => import('./features/analytics/sales-explorer.component').then((m) => m.SalesExplorerComponent),
         data: { title: 'Sales Explorer' },
       },
-      { path: 'analytics/customers', ...placeholder({ title: 'Customer Analytics', description: 'Customer segmentation and purchasing behavior.', icon: 'users', phase: 'Phase 9 — Business Intelligence' }) },
+      {
+        path: 'analytics/customers',
+        loadComponent: () => import('./features/analytics/customer-analytics.component').then((m) => m.CustomerAnalyticsComponent),
+        data: { title: 'Customer Analytics' },
+      },
       {
         path: 'analytics/products',
         loadComponent: () => import('./features/analytics/product-analytics.component').then((m) => m.ProductAnalyticsComponent),
         data: { title: 'Product Analytics' },
       },
-      { path: 'analytics/forecasting', ...placeholder({ title: 'Forecasting', description: 'AI-assisted revenue and demand forecasting.', icon: 'trending-up', phase: 'Phase 9 — Business Intelligence' }) },
-      { path: 'analytics/anomaly-detection', ...placeholder({ title: 'Anomaly Detection', description: 'Investigate detected anomalies across business metrics.', icon: 'alert-triangle', phase: 'Phase 9 — Business Intelligence' }) },
+      {
+        path: 'analytics/forecasting',
+        loadComponent: () => import('./features/analytics/forecasting.component').then((m) => m.ForecastingComponent),
+        data: { title: 'Forecasting' },
+      },
+      {
+        path: 'analytics/anomaly-detection',
+        loadComponent: () => import('./features/analytics/anomaly-detection.component').then((m) => m.AnomalyDetectionComponent),
+        data: { title: 'Anomaly Detection' },
+      },
 
       { path: 'data-platform/pipelines', ...placeholder({ title: 'Data Pipelines', description: 'Pipeline registry and configuration.', icon: 'git-branch', phase: 'Phase 5 — Pipeline Management' }) },
       {

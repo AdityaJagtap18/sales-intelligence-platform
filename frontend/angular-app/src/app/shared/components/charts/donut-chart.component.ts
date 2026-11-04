@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface DonutDatum {
@@ -33,6 +33,14 @@ export class DonutChartComponent {
   @Input() data: DonutDatum[] = [];
   @Input() centerLabel = '';
   @Input() centerValue = '';
+  @Input() clickable = false;
+  @Output() sliceClick = new EventEmitter<DonutDatum>();
+
+  onClick(d: DonutDatum): void {
+    if (this.clickable) {
+      this.sliceClick.emit(d);
+    }
+  }
 
   private readonly circumference = 2 * Math.PI * 15.9155;
 

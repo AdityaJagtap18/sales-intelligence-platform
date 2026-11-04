@@ -24,6 +24,13 @@
     border-bottom: none;
   }
 
+  tr.clickable {
+    cursor: pointer;
+  }
+  tr.clickable:hover td {
+    background: var(--color-surface-card-hover);
+  }
+
   .align-right {
     text-align: right;
   }

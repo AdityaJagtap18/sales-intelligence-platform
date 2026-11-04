@@ -36,10 +36,9 @@ public class AnalyticsController {
         return analyticsService.revenueByTopCustomers();
     }
 
-    @GetMapping("/anomalies")
-    public List<AnomalyRowDto> anomalies() {
-        return analyticsService.anomalies();
-    }
+    // Anomaly listing moved to AnomalyDetectionController (/analytics/anomalies),
+    // which adds filtering and acknowledge/resolve state on top of the same
+    // AnalyticsService#anomalies() computation used here and by Executive Overview.
 
     @GetMapping("/orders")
     public List<OrderRowDto> orders() {

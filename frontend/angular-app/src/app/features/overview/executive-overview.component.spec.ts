@@ -21,7 +21,18 @@ describe('ExecutiveOverviewComponent', () => {
     anomaly: i === 31,
   }));
   const anomalies: AnomalyRow[] = [
-    { metric: 'Order Value', date: 'SO71784', impact: 'High', direction: 'up', confidence: 82 },
+    {
+      key: 'order-value|SO71784',
+      metric: 'Order Value',
+      date: 'SO71784',
+      impact: 'High',
+      direction: 'up',
+      confidence: 82,
+      expectedValue: 1000,
+      observedValue: 1820,
+      acknowledgementStatus: null,
+      acknowledgementNote: null,
+    },
   ];
   const topCustomers: LabelValue[] = [
     { label: 'Action Bicycle Specialists', value: 119960.82 },

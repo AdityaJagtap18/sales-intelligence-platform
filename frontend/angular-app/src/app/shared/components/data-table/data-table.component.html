@@ -8,7 +8,7 @@
   </thead>
   <tbody>
     @for (row of rows; track row) {
-      <tr>
+      <tr [class.clickable]="clickableRows" (click)="onRowClick(row)">
         @for (col of columns; track col.key) {
           <td [class]="'align-' + (col.align ?? 'left')">
             @if (cellTemplates[col.key]) {

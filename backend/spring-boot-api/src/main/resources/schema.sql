@@ -63,3 +63,45 @@ CREATE TABLE IF NOT EXISTS prompt_run (
     error_message TEXT,
     created_at TIMESTAMPTZ NOT NULL
 );
+
+-- Phase 3, Group 1: Forecasting runs (Analytics > Forecasting). A run is
+-- COMPLETED with a method/metrics/result, or INSUFFICIENT_DATA with a reason
+-- — never a fabricated forecast when the Gold-layer history is too thin.
+CREATE TABLE IF NOT EXISTS forecast_run (
+    id BIGSERIAL PRIMARY KEY,
+    metric VARCHAR(32) NOT NULL,
+    horizon_periods INTEGER NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    method VARCHAR(64),
+    mae DOUBLE PRECISION,
+    mape DOUBLE PRECISION,
+    reason TEXT,
+    result_json TEXT,
+    requested_by VARCHAR(128) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+-- Phase 3, Group 1: persistent acknowledge/resolve state for anomalies
+-- surfaced by AnalyticsService.anomalies() (the same source of truth used by
+-- Executive Overview and the dedicated Anomaly Detection page).
+CREATE TABLE IF NOT EXISTS anomaly_acknowledgement (
+    id BIGSERIAL PRIMARY KEY,
+    anomaly_key VARCHAR(256) NOT NULL UNIQUE,
+    status VARCHAR(32) NOT NULL,
+    note VARCHAR(1024),
+    acknowledged_by VARCHAR(128) NOT NULL,
+    acknowledged_at TIMESTAMPTZ NOT NULL
+);
+
+-- Phase 3, Group 1: Report generation history (Overview > Reports).
+CREATE TABLE IF NOT EXISTS report_execution (
+    id BIGSERIAL PRIMARY KEY,
+    report_key VARCHAR(64) NOT NULL,
+    report_name VARCHAR(256) NOT NULL,
+    filters_json TEXT,
+    status VARCHAR(32) NOT NULL,
+    row_count INTEGER,
+    error_message TEXT,
+    requested_by VARCHAR(128) NOT NULL,
+    generated_at TIMESTAMPTZ NOT NULL
+);

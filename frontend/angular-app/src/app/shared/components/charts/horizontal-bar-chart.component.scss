@@ -1,12 +1,19 @@
 .bar-row {
   display: grid;
-  grid-template-columns: 90px 1fr 48px;
+  grid-template-columns: 90px 1fr 72px;
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
 
   &:last-child {
     margin-bottom: 0;
+  }
+
+  &.clickable {
+    cursor: pointer;
+  }
+  &.clickable:hover .bar-label {
+    color: var(--color-text-primary);
   }
 }
 

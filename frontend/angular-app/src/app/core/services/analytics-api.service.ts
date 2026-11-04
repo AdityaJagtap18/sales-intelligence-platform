@@ -27,11 +27,16 @@ export interface LabelValue {
 }
 
 export interface AnomalyRow {
+  key: string;
   metric: string;
   date: string;
   impact: 'High' | 'Medium' | 'Low';
   direction: 'up' | 'down';
   confidence: number;
+  expectedValue: number;
+  observedValue: number;
+  acknowledgementStatus: 'ACKNOWLEDGED' | 'RESOLVED' | null;
+  acknowledgementNote: string | null;
 }
 
 export interface OrderRow {
@@ -71,8 +76,15 @@ export class AnalyticsApiService {
     return this.http.get<LabelValue[]>(`${this.baseUrl}/revenue-by-top-customers`);
   }
 
-  anomalies(): Observable<AnomalyRow[]> {
-    return this.http.get<AnomalyRow[]>(`${this.baseUrl}/anomalies`);
+  anomalies(severity?: string, metric?: string): Observable<AnomalyRow[]> {
+    const params: Record<string, string> = {};
+    if (severity) params['severity'] = severity;
+    if (metric) params['metric'] = metric;
+    return this.http.get<AnomalyRow[]>(`${this.baseUrl}/anomalies`, { params });
+  }
+
+  acknowledgeAnomaly(key: string, status: 'ACKNOWLEDGED' | 'RESOLVED', note?: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/anomalies/${encodeURIComponent(key)}/acknowledge`, { status, note });
   }
 
   orders(): Observable<OrderRow[]> {

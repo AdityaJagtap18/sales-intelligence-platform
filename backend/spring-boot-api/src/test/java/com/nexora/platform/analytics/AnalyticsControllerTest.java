@@ -5,8 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -35,16 +33,5 @@ class AnalyticsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(32))
                 .andExpect(jsonPath("$.topCategoryName").value("Touring Bikes"));
-    }
-
-    @Test
-    void anomaliesReturnsTheRankedListFromTheService() throws Exception {
-        when(analyticsService.anomalies()).thenReturn(List.of(
-                new AnomalyRowDto("Order Value", "SO71784", "High", "up", 82)));
-
-        mockMvc.perform(get("/analytics/anomalies"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].date").value("SO71784"))
-                .andExpect(jsonPath("$[0].impact").value("High"));
     }
 }
