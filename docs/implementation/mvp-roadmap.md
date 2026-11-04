@@ -5,8 +5,8 @@ Status legend: ✅ done · ▶ next · ⏳ not started
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Project discovery & repository assessment | ✅ done (this set of docs) |
-| 2 | Application foundation & design system (Angular shell, Spring Boot skeleton, NEXORA design tokens, nav, Executive Overview shell) | ▶ next |
-| 3 | Local infrastructure (Docker Compose: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana) | ⏳ |
+| 2 | Application foundation & design system (Angular shell, Spring Boot skeleton, NEXORA design tokens, nav, Executive Overview shell) | ✅ done — `frontend/angular-app`, `backend/spring-boot-api` |
+| 3 | Local infrastructure (Docker Compose: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana) | ▶ next |
 | 4 | Core data engineering (AdventureWorksLT2022 local source, Bronze/Silver/Gold ported to MinIO+Delta, data quality checks) | ⏳ |
 | 5 | Pipeline management & observability (registry, execution API, run history, logs/metrics/traces, alerts) | ⏳ |
 | 6 | Context Lake (dataset registry, metadata catalog, document ingestion, semantic search, lineage) | ⏳ |
@@ -30,9 +30,13 @@ Status legend: ✅ done · ▶ next · ⏳ not started
 | 9 | 4 (needs real Gold data), 2 |
 | 10 | all |
 
-## Immediate next step (Phase 2 kickoff prompt)
+## Phase 2 — completed
 
-> Build the Angular application shell and Spring Boot API skeleton. Deliverables: global design tokens derived from Image 1 (NEXORA) per `docs/design/reference-analysis.md`; sidebar + top nav per §6 of the master spec; reusable KPI card, table, chart-container, filter, and badge components; the full navigation tree (even for modules not yet implemented, as disabled/placeholder routes); and a first working Executive Overview screen using **mock data clearly labeled as mock** (no live pipeline exists until Phase 4). Spring Boot: project skeleton, health endpoint, CORS/dev config, no business endpoints yet beyond a `/health` check. Exit criteria: `ng serve` renders a shell visually consistent with Image 1, navigation covers every module in §6, and `docs/architecture/system-architecture.md`'s Postgres/MinIO/etc. ownership rules are not yet violated by anything built (nothing should call a datastore directly from Angular).
+Built `frontend/angular-app` (Angular 18 standalone, NEXORA design tokens in `src/styles.scss`, collapsible sidebar + topbar, full §6 nav tree with lazy placeholder pages for every unbuilt module, reusable KPI card / panel / badge / data table / filter bar / area-line / bar / donut chart components) and `backend/spring-boot-api` (Spring Boot 4, actuator health/info, dev CORS for `localhost:4200`, JPA/datasource autoconfig deliberately disabled until Phase 3 provides a real Postgres). Executive Overview renders on mock data with a visible "Mock data" badge. Verified in-browser against Image 1 — shell, KPI cards, anomaly chart, AI insight panel, donut/bar charts, and sidebar collapse all match. `ng build` and `mvnw compile` both pass clean.
+
+## Immediate next step (Phase 3 kickoff prompt)
+
+> Stand up local infrastructure via Docker Compose: PostgreSQL, MinIO, Neo4j, Qdrant, Ollama, and the observability trio (OpenTelemetry collector, Prometheus, Grafana). Deliverables: `docker-compose.yml` at the repo root plus per-service config under `infrastructure/`; persistent named volumes for every stateful service; health checks; a `.env.example` documenting every required variable (ports, credentials, bucket/database names); and a startup order that respects dependencies (e.g., app services wait on Postgres/MinIO health). Re-enable the Spring Boot datasource/JPA autoconfiguration now that a real Postgres exists, and point it at the Compose Postgres via env vars. Exit criteria: `docker compose up` brings up every service healthy, Spring Boot connects to Postgres on startup, and MinIO/Neo4j/Qdrant/Ollama are each reachable from the host on their documented ports — all without any Azure dependency, per ADR-001.
 
 ## Open assumptions (flag if wrong, otherwise proceeding)
 
