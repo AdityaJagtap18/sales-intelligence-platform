@@ -1,0 +1,69 @@
+<div class="context-lake-page">
+  <app-panel title="Context Lake" subtitle="Local documents stored in MinIO, chunked and embedded into Qdrant for semantic search (Ollama + nomic-embed-text).">
+    <div panelActions>
+      <label class="upload-button" [class.disabled]="uploading()">
+        <app-icon [name]="uploading() ? 'refresh' : 'upload'" [size]="14" />
+        {{ uploading() ? 'Uploading...' : 'Upload Document' }}
+        <input type="file" accept=".txt,.md,.pdf" [disabled]="uploading()" (change)="onFileSelected($event)" hidden />
+      </label>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <app-data-table
+      [columns]="columns"
+      [rows]="documents()"
+      [cellTemplates]="{ status: statusCell, sizeBytes: sizeCell, uploadedAt: uploadedCell }"
+      emptyMessage="No documents yet — upload a .txt, .md or .pdf file to get started."
+    />
+  </app-panel>
+
+  <app-panel title="Semantic Search" subtitle="Searches across all indexed document chunks by embedding similarity, not keyword match.">
+    <div class="search-row">
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Ask something about an uploaded document..."
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        (keyup.enter)="search()"
+      />
+      <button class="search-button" type="button" [disabled]="searching()" (click)="search()">
+        <app-icon name="search" [size]="14" />
+        {{ searching() ? 'Searching...' : 'Search' }}
+      </button>
+    </div>
+
+    @if (searchError()) {
+      <p class="error-banner">{{ searchError() }}</p>
+    }
+
+    @if (searchResults().length > 0) {
+      <div class="search-results">
+        @for (result of searchResults(); track result.documentId + '-' + result.chunkIndex) {
+          <div class="search-result">
+            <div class="search-result-header">
+              <span class="search-result-filename">{{ result.filename }}</span>
+              <span class="search-result-score">{{ (result.score * 100).toFixed(0) }}% match</span>
+            </div>
+            <p class="search-result-text">{{ result.text }}</p>
+          </div>
+        }
+      </div>
+    }
+  </app-panel>
+</div>
+
+<ng-template #statusCell let-row>
+  <app-badge [tone]="statusTone(row.status)">{{ row.status }}</app-badge>
+</ng-template>
+
+<ng-template #sizeCell let-row>
+  {{ formatSize(row.sizeBytes) }}
+</ng-template>
+
+<ng-template #uploadedCell let-row>
+  {{ row.uploadedAt | date: 'short' }}
+</ng-template>

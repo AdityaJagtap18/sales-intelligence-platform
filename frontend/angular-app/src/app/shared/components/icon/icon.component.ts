@@ -44,6 +44,7 @@ const ICONS: Record<string, string> = {
   'help-circle': '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.8 1c0 1.6-2.3 1.8-2.3 3.4"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/>',
   refresh: '<polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.5 9A9 9 0 0 0 4.6 6.3L1 10m22 4-3.6 3.7A9 9 0 0 1 3.5 15"/>',
   play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  upload: '<path d="M12 16V4"/><polyline points="7 9 12 4 17 9"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
 };
 
 @Component({

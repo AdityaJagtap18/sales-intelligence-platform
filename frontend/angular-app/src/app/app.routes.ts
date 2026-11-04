@@ -44,9 +44,21 @@ export const routes: Routes = [
         data: { title: 'Pipeline Runs' },
       },
       { path: 'data-platform/sources', ...placeholder({ title: 'Data Sources', description: 'Registered source systems feeding the platform.', icon: 'plug', phase: 'Phase 4 — Core Data Engineering' }) },
-      { path: 'data-platform/context-lake', ...placeholder({ title: 'Context Lake', description: 'Centralized dataset, document and semantic context management.', icon: 'database', phase: 'Phase 6 — Context Lake' }) },
-      { path: 'data-platform/catalog', ...placeholder({ title: 'Data Catalog', description: 'Browse and search registered data assets and metadata.', icon: 'layers', phase: 'Phase 6 — Context Lake' }) },
-      { path: 'data-platform/lineage', ...placeholder({ title: 'Data Lineage', description: 'Visualize dataset and pipeline dependencies.', icon: 'link', phase: 'Phase 6 — Context Lake' }) },
+      {
+        path: 'data-platform/context-lake',
+        loadComponent: () => import('./features/data-platform/context-lake.component').then((m) => m.ContextLakeComponent),
+        data: { title: 'Context Lake' },
+      },
+      {
+        path: 'data-platform/catalog',
+        loadComponent: () => import('./features/data-platform/catalog.component').then((m) => m.CatalogComponent),
+        data: { title: 'Data Catalog' },
+      },
+      {
+        path: 'data-platform/lineage',
+        loadComponent: () => import('./features/data-platform/lineage.component').then((m) => m.LineageComponent),
+        data: { title: 'Data Lineage' },
+      },
       { path: 'data-platform/quality', ...placeholder({ title: 'Data Quality', description: 'Data quality checks and reconciliation status.', icon: 'shield', phase: 'Phase 5 — Pipeline Management' }) },
 
       { path: 'intelligence/knowledge-graph', ...placeholder({ title: 'Knowledge Graph', description: 'Business and technical entity relationships.', icon: 'share', phase: 'Phase 7 — Knowledge Graph' }) },

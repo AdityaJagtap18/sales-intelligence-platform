@@ -1,0 +1,48 @@
+<div class="lineage-page">
+  <app-panel title="Data Lineage" subtitle="Source -> Bronze -> Silver -> Gold -> Catalog, with live row counts from Databricks.">
+    <div class="table-picker">
+      @for (table of tables(); track table) {
+        <button
+          type="button"
+          class="table-chip"
+          [class.active]="selectedTable() === table"
+          (click)="selectTable(table)"
+        >
+          {{ table }}
+        </button>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    @if (loading()) {
+      <p class="loading-text">Loading lineage...</p>
+    } @else if (lineage()) {
+      <div class="lineage-chain">
+        @for (stage of lineage()!.stages; track stage.stage; let last = $last) {
+          <div class="lineage-stage">
+            <div class="lineage-stage-icon">
+              <app-icon [name]="stageIcon(stage.stage)" [size]="18" />
+            </div>
+            <div class="lineage-stage-body">
+              <div class="lineage-stage-title">{{ stage.stage }}</div>
+              <div class="lineage-stage-system">{{ stage.system }}</div>
+              <div class="lineage-stage-location">{{ stage.location }}</div>
+              @if (stage.rowCount !== null) {
+                <div class="lineage-stage-rowcount">{{ stage.rowCount | number }} rows</div>
+              }
+              <div class="lineage-stage-detail">{{ stage.detail }}</div>
+            </div>
+          </div>
+          @if (!last) {
+            <div class="lineage-arrow">
+              <app-icon name="chevron-right" [size]="20" />
+            </div>
+          }
+        }
+      </div>
+    }
+  </app-panel>
+</div>

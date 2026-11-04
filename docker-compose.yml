@@ -204,10 +204,21 @@ services:
       DATABRICKS_TOKEN: ${DATABRICKS_TOKEN}
       DATABRICKS_JOB_ID: ${DATABRICKS_JOB_ID}
       DATABRICKS_SQL_WAREHOUSE_ID: ${DATABRICKS_SQL_WAREHOUSE_ID}
+      # Context Lake (Phase 6) — container-network hostnames, not localhost.
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nexora}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-nexora_dev_password}
+      MINIO_BUCKET: ${MINIO_BUCKET:-context-lake-documents}
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_URL: http://ollama:11434
     ports:
       - '${SPRING_API_PORT:-8080}:8080'
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
 
 volumes:

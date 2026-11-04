@@ -20,6 +20,45 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.6.0] — Phase 6 completed: Context Lake (catalog, documents, lineage)
+
+### Added
+- `com.nexora.platform.contextlake`: `CatalogSyncService` syncs `catalog_dataset`
+  (Postgres) from `workspace.gold.*` via Unity Catalog's `information_schema`
+  plus a single dynamic row-count query; `CatalogController` exposes
+  `GET /catalog/datasets` and `POST /catalog/refresh`.
+- Document ingestion: `MinioDocumentStore` (raw file storage), `TextExtractor`
+  (`.txt`/`.md`/PDF via Apache PDFBox), `TextChunker`, `OllamaEmbeddingClient`
+  (`nomic-embed-text`, 768-dim), and `QdrantClient` (a plain REST wrapper, no
+  gRPC client dependency) wired together by `DocumentIngestionService` and
+  `DocumentSearchService`. `DocumentController`: `POST /documents`,
+  `GET /documents`, `GET /documents/search`.
+- `LineageService`/`LineageController`: renders the Source -> Bronze -> Silver
+  -> Gold -> Catalog chain per table with live Databricks row counts.
+- Angular: real pages for `/data-platform/catalog`, `/data-platform/context-lake`
+  (upload + semantic search), and `/data-platform/lineage` (table picker + a
+  visual 5-stage chain) — replacing their Phase 2 placeholders.
+- Pulled `nomic-embed-text` into the existing local Ollama container.
+
+### Fixed
+- `.env`'s `MINIO_BUCKET` still held the pre-ADR-005 name
+  (`adventureworks-lt-2022`) from before `.env.example` was updated in Phase
+  3. Recreated MinIO with the correct `context-lake-documents` bucket and
+  removed the stale empty one.
+- Injecting a Spring-managed `ObjectMapper` failed —
+  `spring-boot-starter-webmvc` alone doesn't register one the way
+  `spring-boot-starter-web` used to. Worked around by constructing
+  `ObjectMapper` directly where needed instead of chasing the auto-config gap.
+
+### Verified
+- Uploaded a real document through the Angular UI, searched for it by
+  meaning (not keyword) and got the correct chunk back; refreshed the
+  catalog and saw all 10 Gold tables with real metadata; picked a table in
+  the Lineage page and saw all 5 stages render with matching row counts —
+  all tested live in the browser, not just via curl.
+
+---
+
 ## [0.5.0] — Phase 5 completed: Databricks orchestration + local observability
 
 ### Added

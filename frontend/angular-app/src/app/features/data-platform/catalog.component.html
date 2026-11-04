@@ -1,0 +1,29 @@
+<div class="catalog-page">
+  <app-panel title="Data Catalog" subtitle="workspace.gold.* metadata, synced from Unity Catalog via the SQL Warehouse (Phase 5/6).">
+    <div panelActions>
+      <button class="refresh-button" type="button" [disabled]="refreshing()" (click)="refresh()">
+        <app-icon name="refresh" [size]="14" />
+        {{ refreshing() ? 'Refreshing...' : 'Refresh' }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <app-data-table
+      [columns]="columns"
+      [rows]="rows"
+      [cellTemplates]="{ columnNames: schemaCell, lastRefreshedAt: refreshedCell }"
+      emptyMessage="No datasets cataloged yet — click Refresh to sync from Databricks."
+    />
+  </app-panel>
+</div>
+
+<ng-template #schemaCell let-row>
+  <span class="schema-cell" [attr.title]="row.columnNames">{{ row.columnNames }}</span>
+</ng-template>
+
+<ng-template #refreshedCell let-row>
+  {{ row.lastRefreshedAt | date: 'short' }}
+</ng-template>
