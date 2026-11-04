@@ -20,6 +20,48 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.3.1] — Phase 3 completed: Databricks connectivity + architecture pivot
+
+### Changed
+- **Architecture pivot (ADR-005)**: adopted a hybrid architecture directed by the user —
+  Databricks Free Edition becomes the sole cloud-hosted component and takes over all
+  Bronze/Silver/Gold processing, Delta Lake, and Unity Catalog. This supersedes the local
+  PySpark + MinIO worker plan from the original Phase 4 kickoff prompt before any of that
+  code was written. MinIO's role narrows to local documents/Context Lake files only.
+  `docs/architecture/system-architecture.md`, ADR-001, and ADR-004 updated to match.
+  Roadmap Phases 3–5 rescoped per the user's explicit mapping.
+
+### Added
+- Local SQL Server source service (`sqlserver` + one-shot `sqlserver-restore`) in
+  `docker-compose.yml` — the *source* database for the local-extract → Databricks-upload
+  ingestion path (ADR-005), not an app datastore.
+- `infrastructure/sqlserver/restore.sh`: idempotent restore of the official
+  `AdventureWorksLT2022.bak` (downloaded from Microsoft's `sql-server-samples` GitHub
+  releases), reading the backup's actual logical file names via `RESTORE FILELISTONLY`
+  rather than hardcoding them.
+- `.gitattributes` forcing LF line endings on `*.sh`/`mvnw` so scripts don't break inside
+  Linux containers regardless of a contributor's `git autocrlf` setting.
+- `docs/discovery/databricks-free-edition-assessment.md`: live validation of every
+  Databricks Free Edition constraint named in ADR-005 — auth, Clusters API, SQL Warehouse,
+  Unity Catalog, Jobs API, and a full file upload/list/delete round-trip via the Files API.
+  All confirmed working against the user's real workspace. Decided the local→Databricks
+  upload mechanism (Unity Catalog Volumes + Files API, not DBFS).
+
+### Fixed
+- SQL Server's default non-root container user couldn't write to a Docker-Desktop-created
+  named volume on first boot (`Access is denied` on `master.mdf`). Fixed with `user: root`
+  on the `sqlserver` service.
+
+### Verified
+- All 10 `SalesLT` tables + 3 views present and queryable after restore.
+- Databricks workspace: schema `workspace.nexora` and managed volume
+  `workspace.nexora.raw_uploads` created; a real file was uploaded, listed, and deleted
+  through the Files API.
+- Databricks credentials (`DATABRICKS_HOST`/`DATABRICKS_TOKEN`) were read from `.env` and
+  checked for presence/length only — never displayed, logged, or committed.
+
+---
+
 ## [0.3.0] — Phase 3: Local Infrastructure
 
 ### Added

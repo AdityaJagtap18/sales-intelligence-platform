@@ -30,6 +30,12 @@ services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: unless-stopped
+    # Named volumes on some Docker Desktop setups (notably Windows) are
+    # created root-owned, which the image's default non-root "mssql" user
+    # (uid 10001) can't write to on first boot. Running as root sidesteps
+    # that; the entrypoint script still drops privileges appropriately
+    # where it needs to.
+    user: root
     environment:
       ACCEPT_EULA: 'Y'
       MSSQL_SA_PASSWORD: ${SQLSERVER_SA_PASSWORD:-Nexora_dev_password1}

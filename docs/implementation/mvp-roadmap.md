@@ -11,8 +11,8 @@ changed the scope of Phases 3–5 from the original all-local plan; see ADR-005 
 |---|---|---|
 | 1 | Project discovery & repository assessment | ✅ done |
 | 2 | Application foundation & design system (Angular shell, Spring Boot skeleton, NEXORA design tokens, nav, Executive Overview shell) | ✅ done — `frontend/angular-app`, `backend/spring-boot-api` |
-| 3 | Local infrastructure + Databricks connectivity (Docker Compose: Postgres, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana; validate Databricks Free Edition access) | ⏸ local infra done; Databricks connectivity blocked on account setup (see below) |
-| 4 | Databricks notebook adaptation and pipeline implementation (Bronze/Silver/Gold on Databricks, local source extraction/upload) | ⏳ blocked on Phase 3 Databricks connectivity |
+| 3 | Local infrastructure + Databricks connectivity (Docker Compose: Postgres, Neo4j, Qdrant, Ollama, OTel/Prometheus/Grafana; validate Databricks Free Edition access) | ✅ done — see `docs/discovery/databricks-free-edition-assessment.md` |
+| 4 | Databricks notebook adaptation and pipeline implementation (Bronze/Silver/Gold on Databricks, local source extraction/upload) | ▶ next |
 | 5 | Databricks orchestration integration (Jobs/Lakeflow) and local observability | ⏳ |
 | 6 | Context Lake (dataset registry, metadata catalog, document ingestion, semantic search, lineage — MinIO for local documents only, not analytical data) | ⏳ |
 | 7 | Knowledge Graph (Neo4j schema, sync, Graph Explorer UI) | ⏳ |
@@ -39,35 +39,17 @@ changed the scope of Phases 3–5 from the original all-local plan; see ADR-005 
 
 Built `frontend/angular-app` (Angular 18 standalone, NEXORA design tokens in `src/styles.scss`, collapsible sidebar + topbar, full §6 nav tree with lazy placeholder pages for every unbuilt module, reusable KPI card / panel / badge / data table / filter bar / area-line / bar / donut chart components) and `backend/spring-boot-api` (Spring Boot 4, actuator health/info, dev CORS for `localhost:4200`, JPA/datasource autoconfig deliberately disabled until Phase 3 provides a real Postgres). Executive Overview renders on mock data with a visible "Mock data" badge. Verified in-browser against Image 1 — shell, KPI cards, anomaly chart, AI insight panel, donut/bar charts, and sidebar collapse all match. `ng build` and `mvnw compile` both pass clean.
 
-## Phase 3 — local infra done, Databricks connectivity blocked
+## Phase 3 — completed
 
-Stood up the full local stack via `docker-compose.yml`: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel Collector, Prometheus, and Grafana, all with persistent volumes and health checks. Re-enabled Spring Boot's datasource/JPA autoconfiguration against the Compose Postgres and exposed `/api/actuator/prometheus`. Verified live: all 9 containers healthy, Spring Boot's health check confirms a real DB connection, Prometheus scraping all 3 targets.
+**Local infrastructure**: stood up the full local stack via `docker-compose.yml`: Postgres, MinIO, Neo4j, Qdrant, Ollama, OTel Collector, Prometheus, Grafana, and a local SQL Server **source** database, all with persistent volumes and health checks. Re-enabled Spring Boot's datasource/JPA autoconfiguration against the Compose Postgres and exposed `/api/actuator/prometheus`. Restored the official `AdventureWorksLT2022.bak` into the SQL Server container via an idempotent script (`infrastructure/sqlserver/restore.sh`) that reads the backup's real logical file names rather than hardcoding them — verified all 10 `SalesLT` tables + 3 views are present and queryable. (Hit one real snag: the SQL Server image's default non-root user couldn't write to a Docker Desktop named volume on first boot — fixed with `user: root` on that service, documented in `docs/architecture/local-deployment.md`.)
 
-**Per ADR-005, MinIO's role is now narrowed** to local documents/application-managed files only (Context Lake uploads) — its original bronze/silver/gold key layout is retired; that responsibility moves to Databricks-managed storage and Unity Catalog. No code currently depends on the old MinIO data-lake layout, so nothing needs to be unwound.
+**Databricks connectivity**: once the user set up the Free Edition workspace and added `DATABRICKS_HOST`/`DATABRICKS_TOKEN` to `.env`, validated every constraint in ADR-005's list against the live workspace via real API calls — auth, Clusters API, SQL Warehouse (an existing Serverless Starter Warehouse), Unity Catalog (created `workspace.nexora` schema + `raw_uploads` volume), Jobs API, and a full upload/list/delete round-trip through the Files API. All confirmed working; see `docs/discovery/databricks-free-edition-assessment.md` for the complete results table. Decided the local→Databricks upload mechanism: Unity Catalog Volumes + Files API (not DBFS).
 
-**Databricks connectivity is blocked on a user action this assistant cannot take**: creating the Databricks Free Edition account/workspace. See "Blocked: next action" below.
+**Per ADR-005, MinIO's role is now narrowed** to local documents/application-managed files only (Context Lake uploads) — its original bronze/silver/gold key layout is retired; that responsibility moves to Databricks-managed storage and Unity Catalog. No code currently depends on the old MinIO data-lake layout, so nothing needed to be unwound.
 
-## Blocked: next action (needs the user)
+## Immediate next step (Phase 4 kickoff prompt)
 
-1. Sign up for [Databricks Free Edition](https://www.databricks.com/product/pricing) (or confirm an existing account) and create/confirm a workspace.
-2. In the workspace, generate a **personal access token** (User Settings → Developer → Access tokens).
-3. Add two values to the project's `.env` (never pasted into chat, per this assistant's security rules):
-   ```
-   DATABRICKS_HOST=https://<your-workspace>.cloud.databricks.com
-   DATABRICKS_TOKEN=<your personal access token>
-   ```
-4. Confirm back here once that's done — Phase 3's Databricks-connectivity validation (auth, Jobs API, file upload, SQL Warehouse, fair-use/resource limits) and Phase 4 (notebook adaptation) pick up immediately from there.
-
-## Immediate next step once unblocked (Phase 3 Databricks-connectivity validation)
-
-> With `DATABRICKS_HOST`/`DATABRICKS_TOKEN` available, validate what Free Edition actually supports before building anything on top of it: authenticate via the Databricks REST API (e.g. `/api/2.0/clusters/list` or `/api/2.1/unity-catalog/catalogs`), confirm whether a SQL Warehouse is available and queryable, confirm the Jobs API is reachable, and confirm a file/table upload path (DBFS, Unity Catalog volumes, or `databricks-sql-connector`/`databricks-connect`). Record findings — what's available, what's rate-limited, what's missing — in `docs/architecture/ai-architecture.md` or a new `docs/discovery/databricks-free-edition-assessment.md`, since the master spec explicitly requires validating these constraints before relying on them (no assuming paid-tier features). Exit criteria: a documented, verified answer for each constraint in ADR-005's "Free Edition constraints" list, and a decision on the local→Databricks upload mechanism Phase 4 will use.
-
-## In progress, not blocked: local source data
-
-Independent of the Databricks blocker, `infrastructure/sqlserver/AdventureWorksLT2022.bak` is
-being downloaded from Microsoft's official sample releases (same source this assistant would
-use either way) so the SQL Server container + restore + table extraction step is ready the
-moment Databricks connectivity is confirmed.
+> Build the Databricks notebook adaptation and pipeline: write a local extraction step (Python, reading from the `sqlserver` container via `pyodbc`/`sqlalchemy`) that pulls each `SalesLT` table to Parquet and uploads it to `/Volumes/workspace/nexora/raw_uploads/{table}/` via the Databricks Files API (the mechanism validated in Phase 3 — see `docs/discovery/databricks-free-edition-assessment.md`). Then adapt the existing Bronze→Silver→Gold notebook logic (date normalization, PascalCase→underscore renaming — see `docs/discovery/repository-assessment.md`) to run as Databricks notebooks against that volume, writing Delta tables into `workspace.nexora` under Unity Catalog (no MinIO, no local PySpark — per ADR-005). Add the real data quality checks in the Silver step that the original notebooks never had (nulls, duplicates, referential integrity, freshness — per master-spec Module C), since that's an explicitly named gap, not a rewrite of working logic. Orchestrate as a Databricks Job (even a simple sequential one) rather than running notebooks ad hoc, since Phase 5 builds job-execution monitoring on top of whatever job shape Phase 4 creates. Exit criteria: running the pipeline produces real Gold-layer Delta tables in `workspace.nexora` for all 10 `SalesLT` tables, queryable from the SQL Warehouse, with at least a basic data-quality report for the Silver step — and nothing in this phase touches Spring Boot's control-plane role or exposes Databricks credentials to Angular, per `docs/architecture/system-architecture.md`.
 
 ## Open assumptions (flag if wrong, otherwise proceeding)
 
