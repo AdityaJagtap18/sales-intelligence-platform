@@ -69,6 +69,13 @@
 			<version>3.0.3</version>
 		</dependency>
 		<dependency>
+			<!-- Knowledge Graph (Neo4j) — plain Bolt driver, not Spring Data Neo4j,
+			     to keep the same explicit-Cypher style as QdrantClient. -->
+			<groupId>org.neo4j.driver</groupId>
+			<artifactId>neo4j-java-driver</artifactId>
+			<version>5.27.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>

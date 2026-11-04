@@ -1,0 +1,71 @@
+<div class="explorer-page">
+  <app-panel title="Graph Explorer" subtitle="Interactive multi-hop traversal over the Neo4j knowledge graph. Click any node to re-center.">
+    <div class="controls">
+      <label class="control">
+        <span>Entity type</span>
+        <select [value]="selectedType()" (change)="onTypeChange($any($event.target).value)">
+          @for (type of entityTypes; track type.value) {
+            <option [value]="type.value">{{ type.display }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="control">
+        <span>Entity</span>
+        <select
+          [value]="selectedEntityId()"
+          [disabled]="loadingEntities() || entities().length === 0"
+          (change)="onEntityChange($any($event.target).value)"
+        >
+          @for (entity of entities(); track entity.id) {
+            <option [value]="entity.id">{{ entity.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    @if (loadingTraversal()) {
+      <p class="loading-text">Loading graph...</p>
+    } @else if (traversal() && positionedNodes.length > 0) {
+      <div class="graph-canvas">
+        <svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight" [attr.width]="svgWidth" [attr.height]="svgHeight">
+          @for (edge of positionedEdges; track edge.id) {
+            <line class="graph-edge" [attr.x1]="edge.x1" [attr.y1]="edge.y1" [attr.x2]="edge.x2" [attr.y2]="edge.y2" />
+            <text class="graph-edge-label" [attr.x]="edge.midX" [attr.y]="edge.midY - 4">{{ edge.type }}</text>
+          }
+          @for (node of positionedNodes; track node.id) {
+            <g
+              class="graph-node"
+              [class.graph-node-root]="node.depth === 0"
+              [attr.transform]="'translate(' + node.x + ',' + node.y + ')'"
+              (click)="onNodeClick(node)"
+            >
+              <circle r="26" />
+              <text class="graph-node-label" y="44">{{ node.label }}</text>
+            </g>
+          }
+        </svg>
+      </div>
+
+      <div class="node-detail-grid">
+        @for (node of positionedNodes; track node.id) {
+          <div class="node-detail-card" [class.node-detail-root]="node.depth === 0" (click)="onNodeClick(node)">
+            <div class="node-detail-icon">
+              <app-icon [name]="nodeIcon(node.label)" [size]="16" />
+            </div>
+            <div class="node-detail-body">
+              <div class="node-detail-title">{{ nodeTitle(node) }}</div>
+              <div class="node-detail-label">{{ node.label }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (!loadingEntities()) {
+      <p class="loading-text">No graph data for this selection yet.</p>
+    }
+  </app-panel>
+</div>

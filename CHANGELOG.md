@@ -20,6 +20,57 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [0.7.0] — Phase 7 completed: Knowledge Graph (Neo4j sync, Graph Explorer)
+
+### Added
+- `com.nexora.platform.graph`: `GraphSyncService` populates Neo4j from
+  `workspace.gold.*` (via the existing `DatabricksSqlClient` — no new
+  Databricks access path) and from the `catalog_dataset`/`document` Postgres
+  tables. Builds `(:Customer)-[:PLACED]->(:SalesOrder)-[:CONTAINS]->(:Product)
+  -[:BELONGS_TO]->(:ProductCategory)`, `(:Customer)-[:HAS_ADDRESS]->(:Address)`,
+  `(:ProductCategory)-[:SUBCATEGORY_OF]->(:ProductCategory)`,
+  `(:Product|:ProductCategory)-[:SOURCED_FROM]->(:Dataset)`, and
+  `(:Document)-[:MENTIONS]->(:Product|:ProductCategory)` from a plain
+  substring match of Qdrant chunk text against known entity names (no new
+  NLP dependency). Runs on a schedule and on demand via `POST /graph/sync`.
+- `GraphQueryService`/`GraphController`: `GET /graph/stats`,
+  `GET /graph/entities/{type}`, `GET /graph/entity/{type}/{id}` — a bounded
+  Cypher traversal built from a fixed type map, never raw Cypher from Angular.
+- `QdrantClient.scrollAll()`: single-page scroll over every chunk's payload,
+  reused for the document-mentions match.
+- Angular: `/intelligence/knowledge-graph` (node/relationship totals, a
+  per-label breakdown, Sync Graph button) and `/intelligence/graph-explorer`
+  (entity pickers, an SVG layered diagram laid out client-side via BFS,
+  click-to-recenter) — replacing their Phase 2 placeholders.
+- `neo4j-java-driver` dependency (plain Bolt driver, not Spring Data Neo4j —
+  same explicit-Cypher style as `QdrantClient`).
+
+### Fixed
+- The first sync doubled every node (e.g. 1694 customers instead of 847):
+  `MERGE` without a backing uniqueness constraint does a full node scan, so
+  the scheduled sync firing 20s after startup raced a manual
+  `POST /graph/sync` and both passed the "does this exist" check before
+  either committed. Fixed with a `UNIQUE` constraint per label/id-property
+  (`GraphSyncService.ensureConstraints()`), plus wiping the duplicated graph
+  once before re-syncing.
+- The Graph Explorer's traversal initially included `SOURCED_FROM`, which
+  made any 2-hop traversal fan out to every node of that type (they all
+  share one `Dataset` node) instead of a meaningful entity path. Excluded it
+  from the explorer's traversal query; it stays visible on the Catalog/
+  Lineage pages instead.
+
+### Verified
+- `POST /graph/sync` produced node counts matching the known Gold row counts
+  exactly (847 customers, 450 addresses, 295 products, 41 categories, 32
+  orders, 542 order lines, 1 document).
+- Verified live in the browser: selecting a Sales Order renders its
+  customer, address, and products with real `PLACED`/`HAS_ADDRESS`/
+  `CONTAINS`/`BELONGS_TO` edges; clicking the customer node re-centers the
+  explorer on that customer's own orders and address — an interactive
+  multi-hop path over live data, not sample/seed data.
+
+---
+
 ## [0.6.0] — Phase 6 completed: Context Lake (catalog, documents, lineage)
 
 ### Added

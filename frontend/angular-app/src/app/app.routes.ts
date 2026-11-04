@@ -61,8 +61,16 @@ export const routes: Routes = [
       },
       { path: 'data-platform/quality', ...placeholder({ title: 'Data Quality', description: 'Data quality checks and reconciliation status.', icon: 'shield', phase: 'Phase 5 — Pipeline Management' }) },
 
-      { path: 'intelligence/knowledge-graph', ...placeholder({ title: 'Knowledge Graph', description: 'Business and technical entity relationships.', icon: 'share', phase: 'Phase 7 — Knowledge Graph' }) },
-      { path: 'intelligence/graph-explorer', ...placeholder({ title: 'Graph Explorer', description: 'Interactive graph exploration and queries.', icon: 'search', phase: 'Phase 7 — Knowledge Graph' }) },
+      {
+        path: 'intelligence/knowledge-graph',
+        loadComponent: () => import('./features/intelligence/knowledge-graph.component').then((m) => m.KnowledgeGraphComponent),
+        data: { title: 'Knowledge Graph' },
+      },
+      {
+        path: 'intelligence/graph-explorer',
+        loadComponent: () => import('./features/intelligence/graph-explorer.component').then((m) => m.GraphExplorerComponent),
+        data: { title: 'Graph Explorer' },
+      },
       { path: 'intelligence/prompt-library', ...placeholder({ title: 'Prompt Library', description: 'Create, version and organize reusable AI prompts.', icon: 'message-circle', phase: 'Phase 8 — Prompt Library & AI' }) },
       { path: 'intelligence/prompt-playground', ...placeholder({ title: 'Prompt Playground', description: 'Execute prompts against local Ollama models.', icon: 'terminal', phase: 'Phase 8 — Prompt Library & AI' }) },
       { path: 'intelligence/ai-insights', ...placeholder({ title: 'AI Insights', description: 'Grounded, source-cited AI analysis across the platform.', icon: 'lightbulb', phase: 'Phase 8 — Prompt Library & AI' }) },

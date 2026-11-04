@@ -66,6 +66,28 @@ public class QdrantClient {
         return result instanceof List<?> list ? (List<Map<String, Object>>) list : List.of();
     }
 
+    /**
+     * Single-page scroll over every point's payload (text, documentId,
+     * filename, chunkIndex) — fine at this scope's document volume; a
+     * collection large enough to need {@code next_page_offset} paging isn't
+     * expected here.
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> scrollAll() {
+        ensureCollection();
+        Map<String, Object> response = restClient.post()
+                .uri("/collections/{name}/points/scroll", properties.collection())
+                .body(Map.of("limit", 1000, "with_payload", true, "with_vector", false))
+                .retrieve()
+                .body(Map.class);
+        Object result = response.get("result");
+        if (!(result instanceof Map<?, ?> resultMap)) {
+            return List.of();
+        }
+        Object points = resultMap.get("points");
+        return points instanceof List<?> list ? (List<Map<String, Object>>) list : List.of();
+    }
+
     public void deleteByDocumentId(long documentId) {
         ensureCollection();
         restClient.post()

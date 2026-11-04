@@ -1,0 +1,57 @@
+<div class="kg-page">
+  <app-panel title="Knowledge Graph" subtitle="Neo4j, synced from Gold-layer data and the Context Lake catalog/documents (Phase 7).">
+    <div panelActions>
+      <button class="sync-button" type="button" [disabled]="syncing()" (click)="sync()">
+        <app-icon name="refresh" [size]="14" />
+        {{ syncing() ? 'Syncing...' : 'Sync Graph' }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    @if (stats()) {
+      <div class="totals-row">
+        <div class="total-card">
+          <div class="total-value">{{ stats()!.nodeCount | number }}</div>
+          <div class="total-label">Nodes</div>
+        </div>
+        <div class="total-card">
+          <div class="total-value">{{ stats()!.relationshipCount | number }}</div>
+          <div class="total-label">Relationships</div>
+        </div>
+      </div>
+
+      <div class="label-grid">
+        @for (card of labelCards; track card.label) {
+          <div class="label-card">
+            <div class="label-card-icon">
+              <app-icon [name]="card.icon" [size]="18" />
+            </div>
+            <div class="label-card-body">
+              <div class="label-card-count">{{ card.count | number }}</div>
+              <div class="label-card-name">{{ card.label }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (!errorMessage()) {
+      <p class="loading-text">Loading graph stats...</p>
+    }
+
+    @if (lastSyncResult()) {
+      <p class="sync-summary">
+        Last sync: {{ lastSyncResult()!.customers }} customers, {{ lastSyncResult()!.products }} products,
+        {{ lastSyncResult()!.categories }} categories, {{ lastSyncResult()!.orders }} orders,
+        {{ lastSyncResult()!.orderLines }} order lines, {{ lastSyncResult()!.documents }} documents,
+        {{ lastSyncResult()!.mentions }} document mentions.
+      </p>
+    }
+
+    <a class="explorer-link" routerLink="/intelligence/graph-explorer">
+      Open Graph Explorer
+      <app-icon name="chevron-right" [size]="14" />
+    </a>
+  </app-panel>
+</div>
