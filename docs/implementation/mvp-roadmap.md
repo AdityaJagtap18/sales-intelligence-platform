@@ -19,7 +19,7 @@ changed the scope of Phases 3–5 from the original all-local plan; see ADR-005 
 | 8 | Prompt Library & AI (CRUD, versioning, playground, Ollama, evaluation) | ✅ done — `backend/spring-boot-api` (prompts package), `frontend/angular-app` (Prompt Library/Prompt Playground pages) |
 | 9 | Business Intelligence (dashboards against real Gold data via Databricks SQL Warehouse, forecasting, anomaly detection, AI insights) | ✅ done — `backend/spring-boot-api` (analytics package), `frontend/angular-app` (Executive Overview/Sales Explorer/Product Analytics pages) |
 | 10 | Production validation (tests, security review, deployment docs) | ✅ done — `backend/spring-boot-api/src/test`, `frontend/angular-app/src/app/**/*.spec.ts`, `docs/implementation/phase-10-security-review.md`, `docs/implementation/deployment-guide.md` |
-| Future | Azure redeployment | ⏳ (explicitly out of local MVP) |
+| ~~Future~~ | ~~Azure redeployment~~ — **dropped**, see ADR-006. The local + Databricks Free Edition hybrid (ADR-005) is the permanent architecture, not a stepping stone. | ❌ not planned |
 
 ## Dependency matrix
 
@@ -151,14 +151,14 @@ test suites, and a troubleshooting section for the Postgres-port issue found abo
 
 ## Immediate next step
 
-Phase 10 was the last phase of the local MVP (spec §11). Per the "Open assumptions" below,
-no Azure work starts until this point — that's now reached. The next step is the user's
-call: either begin scoping the Azure redeployment phase, or treat the local MVP as feature-
-complete and move to a different priority.
+Phase 10 was the last phase of the local MVP (spec §11), and the user has since decided
+the project will **not** move to Azure (ADR-006) — the local + Databricks Free Edition
+hybrid from ADR-005 is the permanent architecture. There is no further phase queued; future
+work is scoped as enhancements to the existing stack as the user requests them.
 
 ## Open assumptions (flag if wrong, otherwise proceeding)
 
 1. AdventureWorksLT2022 is seeded locally by restoring the official `.bak` into a local SQL Server container (not the public T-SQL creation scripts) — more faithful to the original architecture and already in progress.
 2. MinIO's analytical bronze/silver/gold layout from the original Phase 3 plan is retired per ADR-005; MinIO is kept only for Context Lake documents/local files.
 3. The existing `.pbix` is preserved untouched; Angular is the primary BI surface going forward (see repository-assessment.md).
-4. No Azure work starts before local Phase 10 is complete, per spec §11 Future Phase. The one cloud dependency in the whole stack is Databricks Free Edition, per ADR-005 — this is intentional, not a drift back toward Azure.
+4. ~~No Azure work starts before local Phase 10 is complete, per spec §11 Future Phase.~~ Superseded by ADR-006: Azure redeployment is dropped entirely, not just deferred. The one cloud dependency in the whole stack is Databricks Free Edition, per ADR-005, and that remains permanent.

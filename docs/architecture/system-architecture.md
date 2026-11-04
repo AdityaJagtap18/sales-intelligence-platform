@@ -58,10 +58,12 @@ Boot, not Grafana or Databricks directly.
   in Phase 6 (Context Lake) based on what's simplest with Ollama's embedding models.
 - Exact Postgres schema — drafted in Phase 3/4, not earlier.
 
-## Azure compatibility seam (future phase only, unaffected by ADR-005)
+## No Azure (ADR-006)
 
-Kept thin on purpose: Ollama calls go through a provider interface, and the Databricks
-integration is already behind a Spring Boot abstraction (Jobs API / SQL Warehouse client),
-which happens to make a future Azure Databricks swap a configuration change rather than a
-rewrite. No Azure SDKs, Key Vault clients, or ADF-shaped abstractions are introduced now —
-per spec §5.2, over-building this seam before it's needed is explicitly discouraged.
+An earlier version of this doc described a thin "Azure compatibility seam" kept open for a
+future Azure Databricks swap. Per ADR-006, that future phase is dropped, not deferred —
+Databricks Free Edition plus the local Docker Compose stack (ADR-005) is the permanent
+architecture. The Spring Boot abstraction around Databricks (Jobs API / SQL Warehouse
+client) and Ollama's provider interface still exist because they're good internal
+boundaries on their own merits, not because they're being kept open for an Azure migration.
+No Azure SDKs, Key Vault clients, or ADF-shaped abstractions should be added.
