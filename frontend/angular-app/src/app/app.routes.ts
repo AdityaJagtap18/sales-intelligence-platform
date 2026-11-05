@@ -123,11 +123,31 @@ export const routes: Routes = [
       },
       { path: 'intelligence/ai-insights', ...placeholder({ title: 'AI Insights', description: 'Grounded, source-cited AI analysis across the platform.', icon: 'lightbulb', phase: 'Phase 8 — Prompt Library & AI' }) },
 
-      { path: 'observability/system-health', ...placeholder({ title: 'System Health', description: 'Infrastructure and service health overview.', icon: 'heart', phase: 'Phase 5 — Pipeline Management & Observability' }) },
-      { path: 'observability/pipeline-monitoring', ...placeholder({ title: 'Pipeline Monitoring', description: 'Pipeline run status, alerts and reliability scoring.', icon: 'bar-chart-2', phase: 'Phase 5 — Pipeline Management & Observability' }) },
-      { path: 'observability/logs-traces', ...placeholder({ title: 'Logs & Traces', description: 'Centralized structured logs and distributed traces.', icon: 'file-text', phase: 'Phase 5 — Pipeline Management & Observability' }) },
-      { path: 'observability/alerts', ...placeholder({ title: 'Alerts', description: 'Pipeline, data quality and infrastructure alerts.', icon: 'bell', phase: 'Phase 5 — Pipeline Management & Observability' }) },
-      { path: 'observability/metrics', ...placeholder({ title: 'Metrics', description: 'Platform and business metrics explorer.', icon: 'sliders', phase: 'Phase 5 — Pipeline Management & Observability' }) },
+      {
+        path: 'observability/system-health',
+        loadComponent: () => import('./features/observability/system-health.component').then((m) => m.SystemHealthComponent),
+        data: { title: 'System Health' },
+      },
+      {
+        path: 'observability/pipeline-monitoring',
+        loadComponent: () => import('./features/observability/pipeline-monitoring.component').then((m) => m.PipelineMonitoringComponent),
+        data: { title: 'Pipeline Monitoring' },
+      },
+      {
+        path: 'observability/logs-traces',
+        loadComponent: () => import('./features/observability/logs-traces.component').then((m) => m.LogsTracesComponent),
+        data: { title: 'Logs & Traces' },
+      },
+      {
+        path: 'observability/alerts',
+        loadComponent: () => import('./features/observability/alerts.component').then((m) => m.AlertsComponent),
+        data: { title: 'Alerts' },
+      },
+      {
+        path: 'observability/metrics',
+        loadComponent: () => import('./features/observability/metrics.component').then((m) => m.MetricsComponent),
+        data: { title: 'Metrics' },
+      },
 
       { path: 'admin/settings', ...placeholder({ title: 'Settings', description: 'Application configuration.', icon: 'settings', phase: 'Ongoing' }) },
       { path: 'admin/integrations', ...placeholder({ title: 'Integrations', description: 'Connected sources and external services.', icon: 'grid-plus', phase: 'Ongoing' }) },

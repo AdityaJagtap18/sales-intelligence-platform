@@ -47,6 +47,30 @@ fabricated data.
   whole pipeline rather than running checks in isolation — there is no narrower real action to wire
   it to.
 
+## Observability (Group 3)
+
+- **Logs & Traces is this one process's own data, not distributed tracing.** No Loki/Tempo/Jaeger
+  exists in `docker-compose.yml`. `InMemoryLogAppender` mirrors this Spring Boot process's real
+  Logback events into a 500-entry ring buffer, and `HttpExchangeRepository` (Spring Boot Actuator's
+  own model) keeps the last 200 real HTTP request/response exchanges this API has handled. Both are
+  genuine, just scoped to one process — there is no trace propagation across Angular, Spring Boot,
+  Databricks and the other services, and the UI says so rather than implying full tracing exists.
+- **Metrics has no historical store of its own.** `MetricsController` reads the live Micrometer
+  `MeterRegistry` directly (the same one Prometheus already scrapes via
+  `management.prometheus.metrics.export`), so the explorer shows only the current sample value per
+  series — Prometheus itself, not this app, is where history would come from.
+- **Alerts only cover the four real conditions this app can actually observe**: non-SUCCESS
+  pipeline runs, failing data-quality checks, high-confidence anomalies (>= 70% confidence, reusing
+  `AnalyticsService#anomalies()`), and DOWN system-health components. There is no generic
+  user-defined alert-rule builder — adding a fifth source means adding a fifth real check, not a
+  rule engine over unrelated data.
+- **Alert acknowledgement has no real user identity to attribute to.** Since no authentication
+  exists yet (Group 5 adds it), "Acknowledge" records `observability-ui` rather than inventing a
+  named user.
+- **System Health's Databricks check reports `NOT_CONFIGURED`, not `DOWN`,** when
+  `DATABRICKS_HOST`/`DATABRICKS_SQL_WAREHOUSE_ID` are unset — an intentionally-skipped cloud
+  dependency (ADR-005 is opt-in per environment) is a different state from a real outage.
+
 ## Forecasting implementation choice
 
 The spec's forecasting section says to "prefer a Python service or worker if the existing

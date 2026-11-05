@@ -14,6 +14,7 @@ export interface PipelineRun {
   startedAt: string;
   updatedAt: string;
   completedAt: string | null;
+  pipelineDefinitionId: number | null;
 }
 
 /**

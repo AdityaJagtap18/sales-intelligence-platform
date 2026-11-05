@@ -128,6 +128,25 @@ CREATE TABLE IF NOT EXISTS data_source (
     created_at TIMESTAMPTZ NOT NULL
 );
 
+-- Phase 3, Group 3: generated alerts (Observability > Alerts). Rows are
+-- upserted by AlertEvaluationService from real conditions elsewhere in the
+-- app (failed pipeline runs, failing data-quality checks, high-confidence
+-- anomalies, DOWN system-health components) — never inserted by hand or
+-- fabricated.
+CREATE TABLE IF NOT EXISTS alert (
+    id BIGSERIAL PRIMARY KEY,
+    source_module VARCHAR(32) NOT NULL,
+    severity VARCHAR(16) NOT NULL,
+    title VARCHAR(256) NOT NULL,
+    message TEXT NOT NULL,
+    dedupe_key VARCHAR(256) NOT NULL UNIQUE,
+    status VARCHAR(32) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    resolved_at TIMESTAMPTZ,
+    acknowledged_by VARCHAR(128)
+);
+
 -- Phase 3, Group 1: Report generation history (Overview > Reports).
 CREATE TABLE IF NOT EXISTS report_execution (
     id BIGSERIAL PRIMARY KEY,
