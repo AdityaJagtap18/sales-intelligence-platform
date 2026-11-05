@@ -20,6 +20,19 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.3.2] — Rebrand: Nexora → Sellix
+
+### Changed
+- Renamed the user-visible product name from "Nexora" to "Sellix" (sidebar brand mark/name,
+  browser tab title, shell's fallback page title, and the design-tokens stylesheet header).
+  Scoped to visible branding only: the Java package (`com.nexora.platform`), database/
+  docker-compose/env-var defaults (`nexora`, `nexora_dev_password`, etc.), the Databricks
+  `workspace.nexora` schema, and Grafana dashboard/metric names are internal identifiers and
+  were deliberately left unchanged — renaming those would mean renaming a real Databricks
+  schema and Postgres database, not a cosmetic change.
+
+---
+
 ## [1.3.1] — Data Sources seeding + Forecasting hidden pending a usable dataset
 
 ### Added

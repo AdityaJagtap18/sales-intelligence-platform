@@ -14,9 +14,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReleaseNotesService {
 
-    public static final String CURRENT_VERSION = "1.3.1";
+    public static final String CURRENT_VERSION = "1.3.2";
 
     private static final List<ReleaseNoteDto> NOTES = List.of(
+            new ReleaseNoteDto("1.3.2", "Rebrand: Nexora -> Sellix",
+                    List.of(), List.of("Renamed the visible product name from Nexora to Sellix across the sidebar, browser tab title, and page title."),
+                    List.of()),
             new ReleaseNoteDto("1.3.1", "Data Sources seeding + Forecasting hidden pending a usable dataset",
                     List.of("Data Sources now shows the real Databricks connection every other page already uses, instead of \"nothing registered\"."),
                     List.of("Forecasting is hidden from navigation and unreachable by URL — the sample dataset's single order date means it can only ever report \"insufficient data\". Code is kept, just unwired, pending a multi-date dataset or an order-sequence-based rework."),

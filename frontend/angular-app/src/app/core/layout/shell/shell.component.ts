@@ -11,7 +11,7 @@ function leafTitle(snapshot: ActivatedRouteSnapshot): string {
   while (current.firstChild) {
     current = current.firstChild;
   }
-  return current.data['title'] ?? 'NEXORA AI';
+  return current.data['title'] ?? 'Sellix AI';
 }
 
 @Component({
