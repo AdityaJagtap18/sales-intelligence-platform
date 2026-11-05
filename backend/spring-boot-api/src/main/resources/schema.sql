@@ -147,6 +147,19 @@ CREATE TABLE IF NOT EXISTS alert (
     acknowledged_by VARCHAR(128)
 );
 
+-- Phase 3, Group 4: AI Insights question/answer history
+-- (Intelligence > AI Insights). answer/citation_count are null/0 for any
+-- non-ANSWERED status (NO_SOURCES, INSUFFICIENT_CONTEXT, GENERATION_FAILED)
+-- -- there is never a stored answer without the real citations behind it.
+CREATE TABLE IF NOT EXISTS ai_insight_run (
+    id BIGSERIAL PRIMARY KEY,
+    question VARCHAR(1024) NOT NULL,
+    answer TEXT,
+    status VARCHAR(32) NOT NULL,
+    citation_count INTEGER NOT NULL,
+    asked_at TIMESTAMPTZ NOT NULL
+);
+
 -- Phase 3, Group 1: Report generation history (Overview > Reports).
 CREATE TABLE IF NOT EXISTS report_execution (
     id BIGSERIAL PRIMARY KEY,

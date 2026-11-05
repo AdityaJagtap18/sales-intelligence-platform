@@ -30,5 +30,10 @@ Updated after each implementation group. Status values: `DONE`, `IN PROGRESS`, `
 | Alerts | /observability/alerts | `alerts` package: `Alert` entity, `AlertEvaluationService` (scheduled, reuses `AnalyticsService#anomalies()`, `DataQualityService`, `PipelineRunService`, `SystemHealthService`), `AlertController` | `AlertsComponent` + `AlertsApiService` | Data Quality -> Alerts, Anomaly Detection -> Alerts, pipeline failures -> Alerts, system health -> Alerts (all 4 of Group 3's real alert sources) | Same as above | No authentication exists yet, so "Acknowledge" attributes to `observability-ui` rather than a real user name (Group 5 introduces accounts). |
 | Metrics | /observability/metrics | `observability` package: `MetricsController` reading the app's own `MeterRegistry` directly (same registry Prometheus scrapes) | `MetricsComponent` + `MetricsApiService` | Surfaces the same custom gauges `DataQualityMetricsPoller` already publishes, alongside JVM/HTTP/Hikari metrics | Same as above | A metrics explorer over Micrometer's live in-process registry, not a long-term time-series store — there is no historical graph, only current sample values (Prometheus itself retains history). |
 
-## Group 4 — Intelligence (NOT STARTED)
+## Group 4 — Intelligence (DONE)
+
+| Page | Route | Backend | Frontend | Integration | Tests | Known limitations |
+|---|---|---|---|---|---|---|
+| AI Insights | /intelligence/ai-insights | `aiinsights` package: `AiInsightsController/Service`, `ai_insight_run` table | `AiInsightsComponent` + `AiInsightsApiService` | Reuses `DocumentSearchService` (Context Lake embedding search), `OllamaChatClient` (Prompt Playground's own Ollama client), and `GraphQueryService#traverse` (Knowledge Graph) for each citation's related entities — no second RAG pipeline | Backend compiles + full suite green; frontend build + existing Karma suite green | Answers are generated only from retrieved chunks scoring >= 0.3 similarity; below that, or with no indexed documents at all, the page shows an honest `NO_SOURCES`/`INSUFFICIENT_CONTEXT` state rather than letting the model answer from unsourced knowledge. Related-entity lookups silently return empty if the Knowledge Graph hasn't been synced for that document yet (not an error). |
+
 ## Group 5 — Administration (NOT STARTED)

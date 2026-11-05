@@ -46,4 +46,14 @@ How each module gets its data, and the cross-module links the spec requires.
 10. **Pipeline Monitoring -> Alerts**: any pipeline run with a non-SUCCESS terminal result opens a CRITICAL alert.
 11. **System Health -> Alerts**: any component reporting DOWN opens a CRITICAL alert.
 
-Still to implement in later groups: AI Insights -> Context Lake/Knowledge Graph, Model Configuration -> AI Insights, System Health -> Integrations.
+## Group 4 additions
+
+| Module | Data source | Path |
+|---|---|---|
+| AI Insights | Context Lake vector search + Knowledge Graph + local Ollama model | Angular -> `/api/ai-insights/*` -> `AiInsightsService` -> `DocumentSearchService` (Qdrant/Ollama embeddings) + `GraphQueryService` (Neo4j) + `OllamaChatClient` |
+
+12. **AI Insights -> Context Lake**: every citation links to the source document (`openDocument` navigates to `/data-platform/context-lake`); the answer is never shown without the real chunks it was generated from.
+13. **AI Insights -> Knowledge Graph**: each citation's "related entities" come from `GraphQueryService#traverse("document", id, 1)` — the same traversal Graph Explorer uses — following the real `(Document)-[:MENTIONS]->(Product|ProductCategory)` edges `GraphSyncService` already writes. Empty (not an error) if that document hasn't been graph-synced yet.
+14. **AI Insights -> Context Lake (no sources)**: when nothing is indexed yet, the page's `NO_SOURCES` state links straight to Context Lake to upload a document, rather than a dead end.
+
+Still to implement in later groups: Model Configuration -> AI Insights, System Health -> Integrations.

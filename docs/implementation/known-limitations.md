@@ -71,6 +71,21 @@ fabricated data.
   `DATABRICKS_HOST`/`DATABRICKS_SQL_WAREHOUSE_ID` are unset — an intentionally-skipped cloud
   dependency (ADR-005 is opt-in per environment) is a different state from a real outage.
 
+## AI Insights (Group 4)
+
+- **Grounding threshold is a fixed heuristic.** Chunks below a 0.3 cosine-similarity score from
+  Qdrant are treated as not relevant; this is a reasonable cutoff for `nomic-embed-text`, not a
+  tuned/validated value — the UI reports the best score it saw so this is inspectable, not hidden.
+- **"Related entities" depend on the Knowledge Graph sync having run for that document.** Context
+  Lake documents are only linked into Neo4j by `GraphSyncService`'s own scheduled sync
+  (`graph.sync-interval-ms`); a newly-indexed document may show no related entities until that sync
+  next runs — this returns an empty list, not an error, and is not presented as "this document
+  mentions nothing."
+- **Answer quality depends on the local Ollama model** (`ollama.chat-model`, default
+  `llama3.2:1b` — a small model chosen to run without a GPU). It is prompted to answer only from the
+  numbered sources and admit when they don't contain the answer, but there is no separate
+  fact-checking pass verifying it actually did so.
+
 ## Forecasting implementation choice
 
 The spec's forecasting section says to "prefer a Python service or worker if the existing

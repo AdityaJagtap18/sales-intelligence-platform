@@ -121,7 +121,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/intelligence/prompt-playground.component').then((m) => m.PromptPlaygroundComponent),
         data: { title: 'Prompt Playground' },
       },
-      { path: 'intelligence/ai-insights', ...placeholder({ title: 'AI Insights', description: 'Grounded, source-cited AI analysis across the platform.', icon: 'lightbulb', phase: 'Phase 8 — Prompt Library & AI' }) },
+      {
+        path: 'intelligence/ai-insights',
+        loadComponent: () => import('./features/intelligence/ai-insights.component').then((m) => m.AiInsightsComponent),
+        data: { title: 'AI Insights' },
+      },
 
       {
         path: 'observability/system-health',
