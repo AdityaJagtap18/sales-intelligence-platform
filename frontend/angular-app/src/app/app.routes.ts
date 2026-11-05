@@ -65,13 +65,21 @@ export const routes: Routes = [
         data: { title: 'Anomaly Detection' },
       },
 
-      { path: 'data-platform/pipelines', ...placeholder({ title: 'Data Pipelines', description: 'Pipeline registry and configuration.', icon: 'git-branch', phase: 'Phase 5 — Pipeline Management' }) },
+      {
+        path: 'data-platform/pipelines',
+        loadComponent: () => import('./features/data-platform/data-pipelines.component').then((m) => m.DataPipelinesComponent),
+        data: { title: 'Data Pipelines' },
+      },
       {
         path: 'data-platform/pipeline-runs',
         loadComponent: () => import('./features/data-platform/pipeline-runs.component').then((m) => m.PipelineRunsComponent),
         data: { title: 'Pipeline Runs' },
       },
-      { path: 'data-platform/sources', ...placeholder({ title: 'Data Sources', description: 'Registered source systems feeding the platform.', icon: 'plug', phase: 'Phase 4 — Core Data Engineering' }) },
+      {
+        path: 'data-platform/sources',
+        loadComponent: () => import('./features/data-platform/data-sources.component').then((m) => m.DataSourcesComponent),
+        data: { title: 'Data Sources' },
+      },
       {
         path: 'data-platform/context-lake',
         loadComponent: () => import('./features/data-platform/context-lake.component').then((m) => m.ContextLakeComponent),
@@ -87,7 +95,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/data-platform/lineage.component').then((m) => m.LineageComponent),
         data: { title: 'Data Lineage' },
       },
-      { path: 'data-platform/quality', ...placeholder({ title: 'Data Quality', description: 'Data quality checks and reconciliation status.', icon: 'shield', phase: 'Phase 5 — Pipeline Management' }) },
+      {
+        path: 'data-platform/quality',
+        loadComponent: () => import('./features/data-platform/data-quality.component').then((m) => m.DataQualityComponent),
+        data: { title: 'Data Quality' },
+      },
 
       {
         path: 'intelligence/knowledge-graph',

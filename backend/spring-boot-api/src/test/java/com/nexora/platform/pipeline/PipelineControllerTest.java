@@ -33,7 +33,7 @@ class PipelineControllerTest {
     @Test
     void runAcceptsTheTriggerAndReturns202WithThePersistedRun() throws Exception {
         PipelineRunDto dto = new PipelineRunDto(1L, 42L, 777L, "PENDING", null, null, "angular-ui",
-                Instant.now(), Instant.now(), null);
+                Instant.now(), Instant.now(), null, null);
         when(service.triggerRun("angular-ui")).thenReturn(dto);
 
         mockMvc.perform(post("/pipelines/run"))

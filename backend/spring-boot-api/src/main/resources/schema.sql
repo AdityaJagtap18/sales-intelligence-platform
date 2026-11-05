@@ -11,6 +11,24 @@ CREATE TABLE IF NOT EXISTS pipeline_run (
     completed_at TIMESTAMPTZ
 );
 
+-- Phase 3, Group 2: pipeline registry. One definition per Databricks job this
+-- app can trigger; pipeline_run.pipeline_definition_id links run history back
+-- to its definition (nullable: rows created before this column existed, or a
+-- run triggered before a matching definition was registered, have none).
+CREATE TABLE IF NOT EXISTS pipeline_definition (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(256) NOT NULL,
+    description VARCHAR(1024),
+    pipeline_type VARCHAR(64) NOT NULL,
+    source_name VARCHAR(256) NOT NULL,
+    destination_name VARCHAR(256) NOT NULL,
+    databricks_job_id BIGINT NOT NULL,
+    data_source_id BIGINT,
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+ALTER TABLE pipeline_run ADD COLUMN IF NOT EXISTS pipeline_definition_id BIGINT;
+
 -- Phase 6: Context Lake dataset catalog (workspace.gold.* metadata, synced
 -- from Unity Catalog — see CatalogSyncService) and document registry
 -- (uploaded files stored in MinIO, chunked/embedded into Qdrant).
@@ -91,6 +109,23 @@ CREATE TABLE IF NOT EXISTS anomaly_acknowledgement (
     note VARCHAR(1024),
     acknowledged_by VARCHAR(128) NOT NULL,
     acknowledged_at TIMESTAMPTZ NOT NULL
+);
+
+-- Phase 3, Group 2: registered source systems (Data Platform > Data Sources).
+-- Secrets live only in connection_config_json's encrypted-at-rest columns are
+-- out of scope for this sample app, but the DTO layer never returns the raw
+-- config back to callers — only a masked summary.
+CREATE TABLE IF NOT EXISTS data_source (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(256) NOT NULL,
+    source_type VARCHAR(32) NOT NULL,
+    connection_config_json TEXT,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    last_test_status VARCHAR(32),
+    last_test_message TEXT,
+    last_tested_at TIMESTAMPTZ,
+    last_successful_ingestion_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL
 );
 
 -- Phase 3, Group 1: Report generation history (Overview > Reports).

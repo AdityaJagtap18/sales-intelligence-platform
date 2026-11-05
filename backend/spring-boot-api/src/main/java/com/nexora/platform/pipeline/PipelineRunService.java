@@ -32,6 +32,18 @@ public class PipelineRunService {
         return PipelineRunDto.from(repository.save(run));
     }
 
+    public PipelineRunDto triggerRun(long jobId, Long pipelineDefinitionId, String triggeredBy) {
+        long databricksRunId = jobsClient.runNow(jobId);
+        Instant now = Instant.now();
+        PipelineRun run = new PipelineRun(jobId, databricksRunId, "PENDING", triggeredBy, now, pipelineDefinitionId);
+        return PipelineRunDto.from(repository.save(run));
+    }
+
+    public List<PipelineRunDto> listRuns(long pipelineDefinitionId) {
+        return repository.findAllByPipelineDefinitionIdOrderByStartedAtDesc(pipelineDefinitionId).stream()
+                .map(PipelineRunDto::from).toList();
+    }
+
     public PipelineRunDto refreshRun(Long id) {
         PipelineRun run = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No pipeline run with id " + id));

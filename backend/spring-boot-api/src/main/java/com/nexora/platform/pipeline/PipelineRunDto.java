@@ -12,7 +12,8 @@ public record PipelineRunDto(
         String triggeredBy,
         Instant startedAt,
         Instant updatedAt,
-        Instant completedAt) {
+        Instant completedAt,
+        Long pipelineDefinitionId) {
 
     public static PipelineRunDto from(PipelineRun run) {
         return new PipelineRunDto(
@@ -25,6 +26,7 @@ public record PipelineRunDto(
                 run.getTriggeredBy(),
                 run.getStartedAt(),
                 run.getUpdatedAt(),
-                run.getCompletedAt());
+                run.getCompletedAt(),
+                run.getPipelineDefinitionId());
     }
 }

@@ -44,6 +44,9 @@ public class PipelineRun {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Column(name = "pipeline_definition_id")
+    private Long pipelineDefinitionId;
+
     protected PipelineRun() {
     }
 
@@ -54,6 +57,16 @@ public class PipelineRun {
         this.triggeredBy = triggeredBy;
         this.startedAt = startedAt;
         this.updatedAt = startedAt;
+    }
+
+    public PipelineRun(Long jobId, Long databricksRunId, String lifecycleState, String triggeredBy, Instant startedAt,
+            Long pipelineDefinitionId) {
+        this(jobId, databricksRunId, lifecycleState, triggeredBy, startedAt);
+        this.pipelineDefinitionId = pipelineDefinitionId;
+    }
+
+    public Long getPipelineDefinitionId() {
+        return pipelineDefinitionId;
     }
 
     public void applyStatus(String lifecycleState, String resultState, String stateMessage, Instant now) {
