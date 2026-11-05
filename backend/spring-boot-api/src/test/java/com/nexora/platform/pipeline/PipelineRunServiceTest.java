@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.nexora.platform.databricks.DatabricksJobsClient;
 import com.nexora.platform.databricks.DatabricksJobsClient.RunStatus;
 import com.nexora.platform.databricks.DatabricksProperties;
+import com.nexora.platform.databricks.DatabricksSqlClient;
 
 @ExtendWith(MockitoExtension.class)
 class PipelineRunServiceTest {
@@ -26,11 +27,13 @@ class PipelineRunServiceTest {
     private DatabricksJobsClient jobsClient;
     @Mock
     private PipelineRunRepository repository;
+    @Mock
+    private DatabricksSqlClient sqlClient;
 
     private final DatabricksProperties properties = new DatabricksProperties("host", "token", 42L, "warehouse", 60000);
 
     private PipelineRunService service() {
-        return new PipelineRunService(jobsClient, properties, repository);
+        return new PipelineRunService(jobsClient, properties, repository, sqlClient);
     }
 
     @Test
@@ -58,6 +61,7 @@ class PipelineRunServiceTest {
         assertThat(result.lifecycleState()).isEqualTo("TERMINATED");
         assertThat(result.resultState()).isEqualTo("SUCCESS");
         assertThat(result.completedAt()).isNotNull();
+        verify(sqlClient).evictAll();
     }
 
     @Test

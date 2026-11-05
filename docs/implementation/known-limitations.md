@@ -110,6 +110,20 @@ fabricated data.
   Health's connectivity checks and the Data Sources registry — both already built in Groups 2–3 —
   specifically to avoid a third, redundant "is this thing connected" implementation.
 
+## Performance
+
+- **Databricks SQL reads are cached for 30s (`databricks.query-cache-ttl-ms`), keyed by exact
+  statement text.** `DatabricksSqlClient` is the single chokepoint nearly every page's data passes
+  through (Sales Dashboard, Executive Overview, Customer Analytics, Reports, Forecasting, Anomaly
+  Detection, Data Quality, Catalog/Lineage), and each uncached call is a real network round trip to
+  the SQL Warehouse. There is no caching library cached in this offline Maven build (no network
+  access to fetch Spring Cache + Caffeine), so this is a plain `ConcurrentHashMap` with a scheduled
+  sweep, not `@Cacheable`. `SELECT 1` connectivity probes (System Health, Data Sources "test
+  connection") are never cached, since those exist specifically to report whether the warehouse is
+  reachable right now. The cache is fully cleared as soon as a triggered pipeline run reaches a
+  terminal state, so "Execute checks" / manual pipeline triggers don't wait out the TTL to show
+  their result.
+
 ## Forecasting implementation choice
 
 The spec's forecasting section says to "prefer a Python service or worker if the existing

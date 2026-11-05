@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.nexora.platform.databricks.DatabricksJobsClient;
 import com.nexora.platform.databricks.DatabricksJobsClient.RunStatus;
 import com.nexora.platform.databricks.DatabricksProperties;
+import com.nexora.platform.databricks.DatabricksSqlClient;
 
 @Service
 public class PipelineRunService {
@@ -16,12 +17,14 @@ public class PipelineRunService {
     private final DatabricksJobsClient jobsClient;
     private final DatabricksProperties properties;
     private final PipelineRunRepository repository;
+    private final DatabricksSqlClient sqlClient;
 
     public PipelineRunService(DatabricksJobsClient jobsClient, DatabricksProperties properties,
-            PipelineRunRepository repository) {
+            PipelineRunRepository repository, DatabricksSqlClient sqlClient) {
         this.jobsClient = jobsClient;
         this.properties = properties;
         this.repository = repository;
+        this.sqlClient = sqlClient;
     }
 
     public PipelineRunDto triggerRun(String triggeredBy) {
@@ -51,6 +54,12 @@ public class PipelineRunService {
             RunStatus status = jobsClient.getRunStatus(run.getDatabricksRunId());
             run.applyStatus(status.lifecycleState(), status.resultState(), status.stateMessage(), Instant.now());
             run = repository.save(run);
+            if (isTerminal(run.getLifecycleState())) {
+                // The job just finished writing Gold-layer / quality-report tables --
+                // drop cached Databricks reads so the next page load sees the new data
+                // immediately rather than waiting out the cache TTL.
+                sqlClient.evictAll();
+            }
         }
         return PipelineRunDto.from(run);
     }
