@@ -26,6 +26,27 @@ fabricated data.
   (Group 5) requires a net-new minimal Spring Security setup — not a retrofit of hidden existing
   logic, since none exists.
 
+## Data platform (Group 2)
+
+- **Only two source types have a real connection to test.** This app holds exactly one Databricks
+  SQL Warehouse connection and one Postgres connection; `DataSourceService#testConnection` pings
+  those actual connections for sources of those types. Registering a source with type CSV/JSON/
+  Parquet reports `NOT_APPLICABLE`, not a fabricated "connected" status, since those are file
+  references rather than live connections this app holds credentials for.
+- **Connection config is masked, never returned raw.** `DataSourceDto` redacts any field whose key
+  contains password/token/secret/key before it reaches the frontend, so there is no API response
+  that can leak a stored credential even to an authenticated caller — relevant ahead of Group 5's
+  user management, where callers won't all be the same trust level.
+- **Only one real Databricks job exists in this environment** (`DATABRICKS_JOB_ID`). The pipeline
+  registry auto-seeds exactly one `PipelineDefinition` from it at startup; the API supports
+  registering further definitions, but there is no second job in this architecture for one to
+  point at, so that path is untested against a real run.
+- **Data Quality has no standalone check-execution step.** Checks run inside the existing
+  Bronze-to-Silver Databricks notebook and land in `workspace.nexora.data_quality_report` (the same
+  table `DataQualityMetricsPoller` already polls into Prometheus). "Execute Checks" re-triggers that
+  whole pipeline rather than running checks in isolation — there is no narrower real action to wire
+  it to.
+
 ## Forecasting implementation choice
 
 The spec's forecasting section says to "prefer a Python service or worker if the existing
