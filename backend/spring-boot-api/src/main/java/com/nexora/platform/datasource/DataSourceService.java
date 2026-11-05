@@ -5,9 +5,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexora.platform.databricks.DatabricksProperties;
 import com.nexora.platform.databricks.DatabricksSqlClient;
 
 /**
@@ -26,12 +29,31 @@ public class DataSourceService {
     private final DataSourceRepository repository;
     private final DatabricksSqlClient sqlClient;
     private final javax.sql.DataSource jdbcDataSource;
+    private final DatabricksProperties databricksProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public DataSourceService(DataSourceRepository repository, DatabricksSqlClient sqlClient, javax.sql.DataSource jdbcDataSource) {
+    public DataSourceService(DataSourceRepository repository, DatabricksSqlClient sqlClient, javax.sql.DataSource jdbcDataSource,
+            DatabricksProperties databricksProperties) {
         this.repository = repository;
         this.sqlClient = sqlClient;
         this.jdbcDataSource = jdbcDataSource;
+        this.databricksProperties = databricksProperties;
+    }
+
+    /**
+     * Seeds one entry for the Databricks connection every other page already reads through
+     * (configured via env, not through this registry) — otherwise this page shows "nothing
+     * registered" even though a real source is live, the same gap {@code PipelineDefinitionService}
+     * closes for the Pipelines registry.
+     */
+    @PostConstruct
+    void seedDefaultSource() {
+        if (databricksProperties.host() == null || !repository.findAllByOrderByNameAsc().isEmpty()) {
+            return;
+        }
+        String config = "{\"host\": \"" + databricksProperties.host() + "\"}";
+        DataSource source = new DataSource("Databricks SQL Warehouse", "DATABRICKS", config, Instant.now());
+        repository.save(source);
     }
 
     public List<DataSourceDto> list() {

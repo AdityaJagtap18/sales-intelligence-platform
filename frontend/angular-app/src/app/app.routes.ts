@@ -40,11 +40,6 @@ export const routes: Routes = [
         data: { title: 'Product Analytics' },
       },
       {
-        path: 'analytics/forecasting',
-        loadComponent: () => import('./features/analytics/forecasting.component').then((m) => m.ForecastingComponent),
-        data: { title: 'Forecasting' },
-      },
-      {
         path: 'analytics/anomaly-detection',
         loadComponent: () => import('./features/analytics/anomaly-detection.component').then((m) => m.AnomalyDetectionComponent),
         data: { title: 'Anomaly Detection' },

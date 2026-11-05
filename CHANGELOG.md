@@ -20,6 +20,26 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.3.1] — Data Sources seeding + Forecasting hidden pending a usable dataset
+
+### Added
+- `DataSourceService` now seeds one entry for the Databricks connection every other page
+  already reads through (configured via env, never previously entered into this registry),
+  the same gap `PipelineDefinitionService` already closes for the Pipelines registry — Data
+  Sources no longer shows "nothing registered" when a real connection is live.
+
+### Changed
+- Forecasting is removed from the nav and its route, making it unreachable in the app. The
+  component and backend (`ForecastingController`/`ForecastingService`/etc.) are left in the
+  codebase, unwired, rather than deleted. Reason: on the loaded AdventureWorksLT sample
+  (single `Order_Date`), it returns `INSUFFICIENT_DATA` on every run — a feature that can
+  never show a result on this dataset shouldn't be a dead end users land on. Re-wire by
+  restoring the `/analytics/forecasting` route and nav entry once a multi-date dataset is
+  loaded, or after reworking it to forecast over order sequence the way the Executive
+  Overview's Order Value Trend chart already does.
+
+---
+
 ## [1.3.0] — Real functionality for previously-decorative topbar/toolbar controls
 
 ### Added

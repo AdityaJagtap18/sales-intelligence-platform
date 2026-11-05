@@ -20,7 +20,6 @@ export const NAV_TREE: NavGroup[] = [
       { label: 'Sales Explorer', path: '/analytics/sales-explorer', icon: 'compass' },
       { label: 'Customer Analytics', path: '/analytics/customers', icon: 'users' },
       { label: 'Product Analytics', path: '/analytics/products', icon: 'box' },
-      { label: 'Forecasting', path: '/analytics/forecasting', icon: 'trending-up' },
       { label: 'Anomaly Detection', path: '/analytics/anomaly-detection', icon: 'alert-triangle' },
     ],
   },

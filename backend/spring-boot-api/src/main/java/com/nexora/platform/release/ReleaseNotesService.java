@@ -14,9 +14,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReleaseNotesService {
 
-    public static final String CURRENT_VERSION = "1.3.0";
+    public static final String CURRENT_VERSION = "1.3.1";
 
     private static final List<ReleaseNoteDto> NOTES = List.of(
+            new ReleaseNoteDto("1.3.1", "Data Sources seeding + Forecasting hidden pending a usable dataset",
+                    List.of("Data Sources now shows the real Databricks connection every other page already uses, instead of \"nothing registered\"."),
+                    List.of("Forecasting is hidden from navigation and unreachable by URL — the sample dataset's single order date means it can only ever report \"insufficient data\". Code is kept, just unwired, pending a multi-date dataset or an order-sequence-based rework."),
+                    List.of()),
             new ReleaseNoteDto("1.3.0", "Real functionality for previously-decorative topbar/toolbar controls",
                     List.of(
                             "Topbar Notifications bell now shows real open alerts with an unread-count badge, instead of doing nothing.",
