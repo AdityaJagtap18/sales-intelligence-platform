@@ -14,9 +14,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReleaseNotesService {
 
-    public static final String CURRENT_VERSION = "1.3.2";
+    public static final String CURRENT_VERSION = "1.4.0";
 
     private static final List<ReleaseNoteDto> NOTES = List.of(
+            new ReleaseNoteDto("1.4.0", "Production deployment: Hostinger VPS, GitHub Actions CI/CD",
+                    List.of(
+                            "Deployed to sellixai.adityajagtap.com (frontend) and sellixai-api.adityajagtap.com (API) with HTTPS.",
+                            "Every push to master now tests, builds container images, and deploys automatically via GitHub Actions."),
+                    List.of(), List.of()),
             new ReleaseNoteDto("1.3.2", "Rebrand: Nexora -> Sellix",
                     List.of(), List.of("Renamed the visible product name from Nexora to Sellix across the sidebar, browser tab title, and page title."),
                     List.of()),

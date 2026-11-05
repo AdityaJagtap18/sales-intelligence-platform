@@ -20,6 +20,38 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.4.0] — Production deployment: Hostinger VPS, GitHub Actions CI/CD
+
+### Added
+- `docker-compose.prod.yml`: a trimmed production stack (Postgres, MinIO, Neo4j, Qdrant,
+  Ollama, the API, and a new static frontend container) — deliberately excludes
+  SQL Server/its restore job (local-only Databricks ingestion source, not needed once
+  Databricks is the live data source) and the OTel/Prometheus/Grafana stack (a separate,
+  optional pipeline the app's own pages don't read from), to fit a 1 vCPU/4GB VPS shared
+  with another project.
+- `frontend/angular-app/Dockerfile` + `nginx.conf`: multi-stage build serving the Angular
+  production bundle via nginx, with SPA fallback routing — previously the frontend had no
+  Dockerfile at all.
+- `src/environments/environment.prod.ts` + an `angular.json` `fileReplacements` entry: a
+  production build now points at the real deployed API origin instead of accidentally
+  shipping `localhost:8080` (this file didn't exist before, so `ng build --configuration
+  production` would have been broken for deployment).
+- `WebConfig`'s CORS allow-list is now `cors.allowed-origins`/`CORS_ALLOWED_ORIGINS`-driven
+  instead of hardcoded to `localhost:4200`/`4201`, so the deployed frontend's origin can be
+  added without touching source.
+- Deployed to `https://sellixai.adityajagtap.com` (frontend) and
+  `https://sellixai-api.adityajagtap.com` (API) on a Hostinger VPS, behind the box's existing
+  nginx (added as new vhosts rather than a second reverse proxy) with Let's Encrypt TLS via
+  certbot. GitHub Actions (`.github/workflows/deploy.yml`) now tests, builds/pushes both
+  images to GHCR, and deploys over SSH on every push to `master`.
+- A 2GB swapfile on the VPS (none existed) as a safety net against OOM kills, since the box
+  has no RAM headroom to spare across two projects.
+- Ollama's production chat model is `qwen2.5:1.5b` (`OLLAMA_CHAT_MODEL`), smaller than the
+  `qwen2.5:3b` used locally, sized for the VPS's real memory constraints rather than for
+  answer quality.
+
+---
+
 ## [1.3.2] — Rebrand: Nexora → Sellix
 
 ### Changed
