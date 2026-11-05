@@ -10,8 +10,8 @@
     },
     {
       "name": "spring-boot-api",
-      "runtimeExecutable": ".\\mvnw.cmd",
-      "runtimeArgs": ["spring-boot:run"],
+      "runtimeExecutable": ".\\run-dev.cmd",
+      "runtimeArgs": [],
       "cwd": "backend/spring-boot-api",
       "port": 8080
     }
