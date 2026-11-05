@@ -110,6 +110,18 @@ fabricated data.
   Health's connectivity checks and the Data Sources registry — both already built in Groups 2–3 —
   specifically to avoid a third, redundant "is this thing connected" implementation.
 
+## Local environment
+
+- **Docker's Ollama is mapped to host port 11435, not Ollama's default 11434.** On a machine that
+  already runs a native Ollama install (common, since Ollama installs itself as a background
+  service), that install binds 11434 first; Docker's container then ends up reachable only on a
+  different interface, and this app's own requests silently hit whichever Ollama the OS resolves
+  `localhost:11434` to -- which may not have the models this app expects (`llama3.2:1b`,
+  `nomic-embed-text`), producing "model not found" errors from Prompt Playground and AI Insights
+  with no hint that two different Ollama instances are involved. `OLLAMA_PORT` in `.env`/
+  `.env.example` and `ollama.url`'s default in `application.properties` both point at 11435 instead
+  so this app's Ollama calls are unambiguous regardless of what else is running on the host.
+
 ## Performance
 
 - **Databricks SQL reads are cached for 30s (`databricks.query-cache-ttl-ms`), keyed by exact
