@@ -20,6 +20,33 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.3.0] — Real functionality for previously-decorative topbar/toolbar controls
+
+### Added
+- Topbar Notifications bell now shows real open `Alert` rows (severity, title, message) from
+  the existing Alerts feature, with a live unread-count badge and a "View all alerts" link —
+  previously a static icon with no data behind it.
+- Topbar Help button opens a popover linking to the in-app Release Notes page, replacing a
+  button that did nothing on click.
+- Topbar AI Assistant icon navigates to AI Insights; the topbar search box submits its query
+  to AI Insights via a `q` query param, which `AiInsightsComponent` now reads on load and
+  asks automatically — the search bar was previously inert.
+- Executive Overview's date-range chip is a real date-range picker (`FilterBarComponent`),
+  wired end-to-end through new `AnalyticsService`/`AnalyticsController` `from`/`to` params
+  (mirroring the Sales Dashboard's existing `SalesFilter` pattern) down to the sales summary,
+  revenue-by-category, top-customers, orders and product-performance queries — previously a
+  hardcoded `"June 2008"` label with no picker behind it. Because AdventureWorksLT's loaded
+  sample data has only a single `Order_Date`, filtering has no visible effect on this dataset
+  (same documented limitation as the Sales Dashboard's "Revenue Growth: Not available"), but
+  the filter is real and will narrow results once the Gold layer carries orders across
+  multiple dates. The decorative, non-functional "Filters ⌄" dropdown (no backing dimension)
+  was removed rather than left as dead UI.
+
+### Changed
+- Added a `calendar` icon to the shared icon dictionary for the date-range chip.
+
+---
+
 ## [1.2.0] — AI Insights live-data grounding + responsible-AI safeguards
 
 ### Added

@@ -1,22 +1,64 @@
 <header class="topbar">
   <h1 class="page-title">{{ pageTitle }}</h1>
-
   <div class="search">
     <app-icon name="search" [size]="15" />
-    <input type="text" placeholder="Ask AI or search metrics..." />
+    <input
+      type="text"
+      placeholder="Ask AI or search metrics..."
+      [(ngModel)]="searchQuery"
+      (keydown.enter)="submitSearch()"
+    />
     <kbd>⌘K</kbd>
   </div>
-
   <div class="actions">
-    <button class="icon-btn" type="button" title="AI Assistant">
+    <button class="icon-btn" type="button" title="AI Assistant" (click)="goToAiAssistant()">
       <app-icon name="sparkles" [size]="18" />
     </button>
-    <button class="icon-btn" type="button" title="Notifications">
-      <app-icon name="bell" [size]="18" />
-    </button>
-    <button class="icon-btn" type="button" title="Help">
-      <app-icon name="help-circle" [size]="18" />
-    </button>
+
+    <div class="menu-wrapper">
+      <button class="icon-btn" type="button" title="Notifications" (click)="toggleNotifications($event)">
+        <app-icon name="bell" [size]="18" />
+        @if (openAlerts().length) {
+          <span class="badge-count">{{ openAlerts().length }}</span>
+        }
+      </button>
+      @if (notifOpen) {
+        <div class="menu-popover" (click)="$event.stopPropagation()">
+          <div class="menu-header">Open Alerts</div>
+          @if (openAlerts().length) {
+            @for (alert of openAlerts().slice(0, 5); track alert.id) {
+              <div class="notif-item">
+                <span class="severity-dot" [class]="alert.severity.toLowerCase()"></span>
+                <div class="notif-text">
+                  <div class="notif-title">{{ alert.title }}</div>
+                  <div class="notif-message">{{ alert.message }}</div>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="menu-empty">No open alerts.</div>
+          }
+          <a class="menu-footer-link" routerLink="/observability/alerts">View all alerts</a>
+        </div>
+      }
+    </div>
+
+    <div class="menu-wrapper">
+      <button class="icon-btn" type="button" title="Help" (click)="toggleHelp($event)">
+        <app-icon name="help-circle" [size]="18" />
+      </button>
+      @if (helpOpen) {
+        <div class="menu-popover" (click)="$event.stopPropagation()">
+          <div class="menu-header">Help</div>
+          <a class="menu-link" routerLink="/admin/release-notes">
+            <app-icon name="file-text" [size]="14" />
+            Release notes & changelog
+          </a>
+          <div class="menu-tip">Press <kbd>⌘K</kbd> to jump into the search box.</div>
+        </div>
+      }
+    </div>
+
     <div class="user">
       <div class="avatar">AM</div>
       <div class="user-meta">

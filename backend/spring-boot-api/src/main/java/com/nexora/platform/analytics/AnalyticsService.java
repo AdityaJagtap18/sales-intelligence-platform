@@ -1,5 +1,6 @@
 package com.nexora.platform.analytics;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,21 +81,37 @@ public class AnalyticsService {
     }
 
     public SalesSummaryDto salesSummary() {
-        List<String> row = sqlClient.executeQuery(SUMMARY_SQL).get(0);
+        return salesSummary(null, null);
+    }
+
+    /**
+     * Same KPIs as {@link #salesSummary()}, restricted to orders placed in
+     * [from, to] (either bound may be null). AdventureWorksLT's sample data has
+     * only a single Order_Date, so on this dataset the filtered and unfiltered
+     * results are identical — the filter is still real and will narrow results
+     * once the Gold layer carries orders across multiple dates.
+     */
+    public SalesSummaryDto salesSummary(LocalDate from, LocalDate to) {
+        String where = dateWhere(from, to, "soh");
+        String sql = where.isEmpty() ? SUMMARY_SQL : """
+                SELECT
+                  SUM(soh.Total_Due) AS total_revenue,
+                  COUNT(DISTINCT soh.Sales_Order_ID) AS total_orders,
+                  COUNT(DISTINCT soh.Customer_ID) AS total_customers,
+                  (SELECT COUNT(*) FROM workspace.gold.product) AS total_products
+                FROM workspace.gold.salesorderheader soh
+                """ + where;
+        List<String> row = sqlClient.executeQuery(sql).get(0);
         double totalRevenue = doubleAt(row, 0);
         long totalOrders = longAt(row, 1);
         long totalCustomers = longAt(row, 2);
         long totalProducts = longAt(row, 3);
         double avgOrderValue = totalOrders == 0 ? 0 : totalRevenue / totalOrders;
 
-        List<List<String>> categoryRows = sqlClient.executeQuery(REVENUE_BY_CATEGORY_SQL);
-        String topCategoryName = "Unknown";
-        double topCategoryRevenue = 0;
-        if (!categoryRows.isEmpty()) {
-            topCategoryName = strAt(categoryRows.get(0), 0);
-            topCategoryRevenue = doubleAt(categoryRows.get(0), 1);
-        }
-        double topShare = totalRevenue == 0 ? 0 : (topCategoryRevenue / totalRevenue) * 100;
+        List<LabelValueDto> categories = revenueByCategory(from, to);
+        String topCategoryName = categories.isEmpty() ? "Unknown" : categories.get(0).label();
+        double topShare = categories.isEmpty() ? 0 : categories.get(0).value();
+        double topCategoryRevenue = totalRevenue * topShare / 100;
 
         return new SalesSummaryDto(totalRevenue, totalOrders, avgOrderValue, totalCustomers, totalProducts,
                 topCategoryName, round2(topCategoryRevenue), round2(topShare));
@@ -102,7 +119,22 @@ public class AnalyticsService {
 
     /** Revenue share per category, as a percentage of total category revenue (fits the bar chart's "%" display). */
     public List<LabelValueDto> revenueByCategory() {
-        List<List<String>> rows = sqlClient.executeQuery(REVENUE_BY_CATEGORY_SQL);
+        return revenueByCategory(null, null);
+    }
+
+    public List<LabelValueDto> revenueByCategory(LocalDate from, LocalDate to) {
+        String where = dateWhere(from, to, "soh");
+        String sql = where.isEmpty() ? REVENUE_BY_CATEGORY_SQL : """
+                SELECT pc.Name AS category, SUM(sod.Line_Total) AS revenue
+                FROM workspace.gold.salesorderheader soh
+                JOIN workspace.gold.salesorderdetail sod ON sod.Sales_Order_ID = soh.Sales_Order_ID
+                JOIN workspace.gold.product p ON sod.Product_ID = p.Product_ID
+                JOIN workspace.gold.productcategory pc ON p.Product_Category_ID = pc.Product_Category_ID
+                """ + where + """
+                GROUP BY pc.Name
+                ORDER BY revenue DESC
+                """;
+        List<List<String>> rows = sqlClient.executeQuery(sql);
         double total = rows.stream().mapToDouble(r -> doubleAt(r, 1)).sum();
         List<LabelValueDto> result = new ArrayList<>();
         for (List<String> row : rows) {
@@ -114,8 +146,17 @@ public class AnalyticsService {
     }
 
     public List<LabelValueDto> revenueByTopCustomers() {
+        return revenueByTopCustomers(null, null);
+    }
+
+    public List<LabelValueDto> revenueByTopCustomers(LocalDate from, LocalDate to) {
+        String where = dateWhere(from, to, "soh");
+        String sql = "SELECT c.Company_Name AS customer, SUM(soh.Total_Due) AS revenue\n"
+                + "FROM workspace.gold.salesorderheader soh\n"
+                + "JOIN workspace.gold.customer c ON soh.Customer_ID = c.Customer_ID\n"
+                + where + "\nGROUP BY c.Company_Name\nORDER BY revenue DESC\nLIMIT 5";
         List<LabelValueDto> result = new ArrayList<>();
-        for (List<String> row : sqlClient.executeQuery(REVENUE_BY_CUSTOMER_SQL)) {
+        for (List<String> row : sqlClient.executeQuery(sql)) {
             result.add(new LabelValueDto(strAt(row, 0), round2(doubleAt(row, 1))));
         }
         return result;
@@ -163,19 +204,61 @@ public class AnalyticsService {
     }
 
     public List<OrderRowDto> orders() {
+        return orders(null, null);
+    }
+
+    public List<OrderRowDto> orders(LocalDate from, LocalDate to) {
+        String where = dateWhere(from, to, "soh");
+        String sql = where.isEmpty() ? ORDERS_SQL : """
+                SELECT soh.Sales_Order_Number, soh.Order_Date, c.Company_Name, soh.Total_Due, COUNT(sod.Sales_Order_Detail_ID)
+                FROM workspace.gold.salesorderheader soh
+                JOIN workspace.gold.customer c ON soh.Customer_ID = c.Customer_ID
+                JOIN workspace.gold.salesorderdetail sod ON sod.Sales_Order_ID = soh.Sales_Order_ID
+                """ + where + """
+                GROUP BY soh.Sales_Order_Number, soh.Order_Date, c.Company_Name, soh.Total_Due
+                ORDER BY soh.Total_Due DESC
+                """;
         List<OrderRowDto> result = new ArrayList<>();
-        for (List<String> row : sqlClient.executeQuery(ORDERS_SQL)) {
+        for (List<String> row : sqlClient.executeQuery(sql)) {
             result.add(new OrderRowDto(strAt(row, 0), strAt(row, 1), strAt(row, 2), doubleAt(row, 3), longAt(row, 4)));
         }
         return result;
     }
 
     public List<ProductPerformanceDto> productPerformance() {
+        return productPerformance(null, null);
+    }
+
+    public List<ProductPerformanceDto> productPerformance(LocalDate from, LocalDate to) {
+        String where = dateWhere(from, to, "soh");
+        String sql = where.isEmpty() ? PRODUCT_PERFORMANCE_SQL : """
+                SELECT p.Name, pc.Name AS category, SUM(sod.Order_Qty), SUM(sod.Line_Total)
+                FROM workspace.gold.salesorderheader soh
+                JOIN workspace.gold.salesorderdetail sod ON sod.Sales_Order_ID = soh.Sales_Order_ID
+                JOIN workspace.gold.product p ON sod.Product_ID = p.Product_ID
+                LEFT JOIN workspace.gold.productcategory pc ON p.Product_Category_ID = pc.Product_Category_ID
+                """ + where + """
+                GROUP BY p.Name, pc.Name
+                ORDER BY SUM(sod.Line_Total) DESC
+                LIMIT 20
+                """;
         List<ProductPerformanceDto> result = new ArrayList<>();
-        for (List<String> row : sqlClient.executeQuery(PRODUCT_PERFORMANCE_SQL)) {
+        for (List<String> row : sqlClient.executeQuery(sql)) {
             result.add(new ProductPerformanceDto(strAt(row, 0), row.get(1), longAt(row, 2), doubleAt(row, 3)));
         }
         return result;
+    }
+
+    /** Builds a {@code WHERE alias.Order_Date >= / <=} clause; dates come from LocalDate.parse, never raw user text, so no escaping is needed. */
+    private static String dateWhere(LocalDate from, LocalDate to, String alias) {
+        List<String> clauses = new ArrayList<>();
+        if (from != null) {
+            clauses.add(alias + ".Order_Date >= '" + from + "'");
+        }
+        if (to != null) {
+            clauses.add(alias + ".Order_Date <= '" + to + "'");
+        }
+        return clauses.isEmpty() ? "" : " WHERE " + String.join(" AND ", clauses) + "\n";
     }
 
     private static double mean(double[] values) {

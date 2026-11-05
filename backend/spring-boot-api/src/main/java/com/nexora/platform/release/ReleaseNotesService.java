@@ -14,9 +14,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReleaseNotesService {
 
-    public static final String CURRENT_VERSION = "1.2.0";
+    public static final String CURRENT_VERSION = "1.3.0";
 
     private static final List<ReleaseNoteDto> NOTES = List.of(
+            new ReleaseNoteDto("1.3.0", "Real functionality for previously-decorative topbar/toolbar controls",
+                    List.of(
+                            "Topbar Notifications bell now shows real open alerts with an unread-count badge, instead of doing nothing.",
+                            "Topbar Help button links to this Release Notes page; the AI Assistant icon and search box now open AI Insights (search auto-asks your typed question).",
+                            "Executive Overview's date-range chip is a real date-range picker wired to the sales queries (no visible effect on this single-date sample dataset, but genuinely wired end-to-end)."),
+                    List.of("Removed the decorative \"Filters\" dropdown on Executive Overview, which had no real filter behind it."),
+                    List.of()),
             new ReleaseNoteDto("1.2.0", "AI Insights live-data grounding + responsible-AI safeguards",
                     List.of(
                             "AI Insights answers are now grounded in a live Databricks sales-data snapshot (revenue, orders, category/product breakdowns), not only uploaded documents.",

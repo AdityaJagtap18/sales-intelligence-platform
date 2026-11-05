@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PanelComponent } from '../../shared/components/panel/panel.component';
 import { BadgeComponent, BadgeTone } from '../../shared/components/badge/badge.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -132,10 +132,19 @@ export class AiInsightsComponent implements OnInit {
   readonly response = signal<AiInsightResponse | null>(null);
   readonly history = signal<AiInsightHistoryEntry[]>([]);
 
-  constructor(private readonly api: AiInsightsApiService, private readonly router: Router) {}
+  constructor(
+    private readonly api: AiInsightsApiService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+  ) {}
 
   ngOnInit(): void {
     this.loadHistory();
+    const q = this.route.snapshot.queryParamMap.get('q');
+    if (q) {
+      this.question = q;
+      this.ask();
+    }
   }
 
   ask(): void {

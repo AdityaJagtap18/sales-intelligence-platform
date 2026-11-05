@@ -9,7 +9,9 @@ import { AreaLineChartComponent, AreaLinePoint } from '../../shared/components/c
 import { HorizontalBarChartComponent, BarDatum } from '../../shared/components/charts/horizontal-bar-chart.component';
 import { DonutChartComponent, DonutDatum } from '../../shared/components/charts/donut-chart.component';
 import { DataTableComponent, TableColumn } from '../../shared/components/data-table/data-table.component';
-import { AnalyticsApiService, SalesSummary, AnomalyRow } from '../../core/services/analytics-api.service';
+import { AnalyticsApiService, SalesSummary, AnomalyRow, DateRange } from '../../core/services/analytics-api.service';
+import { SalesApiService } from '../../core/services/sales-api.service';
+import { DateRangeChange } from '../../shared/components/filter-bar/filter-bar.component';
 
 interface KpiView {
   label: string;
@@ -45,7 +47,11 @@ export class ExecutiveOverviewComponent implements OnInit {
   readonly recentAnomalies = signal<AnomalyRow[]>([]);
   readonly summary = signal<SalesSummary | null>(null);
   readonly errorMessage = signal<string | null>(null);
+  readonly minOrderDate = signal<string | null>(null);
+  readonly maxOrderDate = signal<string | null>(null);
+  readonly rangeLabel = signal('All available orders');
   private sparkline: number[] = [];
+  private range: DateRange = {};
 
   readonly anomalyColumns: TableColumn[] = [
     { key: 'metric', label: 'Metric' },
@@ -54,18 +60,21 @@ export class ExecutiveOverviewComponent implements OnInit {
     { key: 'confidence', label: 'Confidence', align: 'right' },
   ];
 
-  constructor(private readonly analyticsApi: AnalyticsApiService) {}
+  constructor(private readonly analyticsApi: AnalyticsApiService, private readonly salesApi: SalesApiService) {}
 
   ngOnInit(): void {
-    this.analyticsApi.salesSummary().subscribe({
-      next: (summary) => {
-        this.summary.set(summary);
-        this.errorMessage.set(null);
-        this.buildKpis();
+    this.salesApi.filterOptions().subscribe({
+      next: (o) => {
+        this.minOrderDate.set(o.minOrderDate);
+        this.maxOrderDate.set(o.maxOrderDate);
       },
-      error: () => this.errorMessage.set('Could not load the sales summary from the Spring Boot API.'),
     });
 
+    this.loadData();
+
+    // Order Value Trend and anomaly detection are based on order sequence
+    // (Sales_Order_ID), not Order_Date, so they aren't affected by the date
+    // filter — see AnalyticsService#revenueTrend().
     this.analyticsApi.revenueTrend().subscribe({
       next: (points) => {
         // 32 order numbers would overflow the chart's x-axis label row if
@@ -87,20 +96,37 @@ export class ExecutiveOverviewComponent implements OnInit {
       error: () => this.errorMessage.set('Could not load the revenue trend.'),
     });
 
-    this.analyticsApi.revenueByCategory().subscribe({
-      next: (data) => this.revenueByCategory.set(data),
-      error: () => this.errorMessage.set('Could not load revenue by category.'),
-    });
-
-    this.analyticsApi.revenueByTopCustomers().subscribe({
-      next: (data) => this.revenueByTopCustomers.set(data),
-      error: () => this.errorMessage.set('Could not load revenue by top customers.'),
-    });
-
     this.analyticsApi.anomalies().subscribe({
       next: (rows) => this.recentAnomalies.set(rows),
       error: () => this.errorMessage.set('Could not load anomalies.'),
     });
+  }
+
+  private loadData(): void {
+    this.analyticsApi.salesSummary(this.range).subscribe({
+      next: (summary) => {
+        this.summary.set(summary);
+        this.errorMessage.set(null);
+        this.buildKpis();
+      },
+      error: () => this.errorMessage.set('Could not load the sales summary from the Spring Boot API.'),
+    });
+
+    this.analyticsApi.revenueByCategory(this.range).subscribe({
+      next: (data) => this.revenueByCategory.set(data),
+      error: () => this.errorMessage.set('Could not load revenue by category.'),
+    });
+
+    this.analyticsApi.revenueByTopCustomers(this.range).subscribe({
+      next: (data) => this.revenueByTopCustomers.set(data),
+      error: () => this.errorMessage.set('Could not load revenue by top customers.'),
+    });
+  }
+
+  onRangeChange(change: DateRangeChange): void {
+    this.range = { from: change.from ?? undefined, to: change.to ?? undefined };
+    this.rangeLabel.set(change.from || change.to ? `${change.from ?? 'earliest'} to ${change.to ?? 'latest'}` : 'All available orders');
+    this.loadData();
   }
 
   private buildKpis(): void {

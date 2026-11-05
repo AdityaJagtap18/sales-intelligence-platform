@@ -54,26 +54,38 @@ export interface ProductPerformance {
   revenue: number;
 }
 
+export interface DateRange {
+  from?: string;
+  to?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsApiService {
   private readonly baseUrl = `${environment.apiBaseUrl}/analytics`;
 
   constructor(private readonly http: HttpClient) {}
 
-  salesSummary(): Observable<SalesSummary> {
-    return this.http.get<SalesSummary>(`${this.baseUrl}/sales-summary`);
+  private rangeParams(range?: DateRange): Record<string, string> {
+    const params: Record<string, string> = {};
+    if (range?.from) params['from'] = range.from;
+    if (range?.to) params['to'] = range.to;
+    return params;
+  }
+
+  salesSummary(range?: DateRange): Observable<SalesSummary> {
+    return this.http.get<SalesSummary>(`${this.baseUrl}/sales-summary`, { params: this.rangeParams(range) });
   }
 
   revenueTrend(): Observable<RevenueTrendPoint[]> {
     return this.http.get<RevenueTrendPoint[]>(`${this.baseUrl}/revenue-trend`);
   }
 
-  revenueByCategory(): Observable<LabelValue[]> {
-    return this.http.get<LabelValue[]>(`${this.baseUrl}/revenue-by-category`);
+  revenueByCategory(range?: DateRange): Observable<LabelValue[]> {
+    return this.http.get<LabelValue[]>(`${this.baseUrl}/revenue-by-category`, { params: this.rangeParams(range) });
   }
 
-  revenueByTopCustomers(): Observable<LabelValue[]> {
-    return this.http.get<LabelValue[]>(`${this.baseUrl}/revenue-by-top-customers`);
+  revenueByTopCustomers(range?: DateRange): Observable<LabelValue[]> {
+    return this.http.get<LabelValue[]>(`${this.baseUrl}/revenue-by-top-customers`, { params: this.rangeParams(range) });
   }
 
   anomalies(severity?: string, metric?: string): Observable<AnomalyRow[]> {
@@ -87,11 +99,11 @@ export class AnalyticsApiService {
     return this.http.post(`${this.baseUrl}/anomalies/${encodeURIComponent(key)}/acknowledge`, { status, note });
   }
 
-  orders(): Observable<OrderRow[]> {
-    return this.http.get<OrderRow[]>(`${this.baseUrl}/orders`);
+  orders(range?: DateRange): Observable<OrderRow[]> {
+    return this.http.get<OrderRow[]>(`${this.baseUrl}/orders`, { params: this.rangeParams(range) });
   }
 
-  products(): Observable<ProductPerformance[]> {
-    return this.http.get<ProductPerformance[]>(`${this.baseUrl}/products`);
+  products(range?: DateRange): Observable<ProductPerformance[]> {
+    return this.http.get<ProductPerformance[]>(`${this.baseUrl}/products`, { params: this.rangeParams(range) });
   }
 }

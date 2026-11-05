@@ -4,7 +4,12 @@
       <app-icon name="database" [size]="12" />
       Live — workspace.gold.* via Databricks (AdventureWorksLT sample, June 2008)
     </app-badge>
-    <app-filter-bar dateRangeLabel="June 2008" />
+    <app-filter-bar
+      [dateRangeLabel]="rangeLabel()"
+      [minDate]="minOrderDate()"
+      [maxDate]="maxOrderDate()"
+      (rangeChange)="onRangeChange($event)"
+    />
   </div>
 
   @if (errorMessage()) {
