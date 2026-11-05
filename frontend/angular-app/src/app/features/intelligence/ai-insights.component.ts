@@ -18,7 +18,7 @@ import {
   imports: [CommonModule, FormsModule, PanelComponent, BadgeComponent, IconComponent, EmptyStateComponent],
   template: `
     <div class="page">
-      <app-panel title="Ask AI Insights" subtitle="Answers are generated only from documents indexed in the Context Lake, with real citations">
+      <app-panel title="Ask AI Insights" subtitle="Answers are grounded in live Databricks sales data and documents indexed in the Context Lake, with real citations">
         <form class="ask-form" (ngSubmit)="ask()">
           <input class="ask-input" type="text" [(ngModel)]="question" name="question"
             placeholder="Ask a question about the indexed documents…" [disabled]="asking()" />
@@ -38,8 +38,14 @@ import {
                 @for (c of response()!.citations; track c.documentId + '-' + c.chunkIndex) {
                   <div class="citation">
                     <div class="citation-head">
-                      <a class="citation-filename" (click)="openDocument(c.documentId)">{{ c.filename }}</a>
-                      <app-badge tone="accent">chunk {{ c.chunkIndex }}</app-badge>
+                      @if (c.documentId > 0) {
+                        <a class="citation-filename" (click)="openDocument(c.documentId)">{{ c.filename }}</a>
+                      } @else {
+                        <span class="citation-filename citation-filename-live">{{ c.filename }}</span>
+                      }
+                      @if (c.chunkIndex >= 0) {
+                        <app-badge tone="accent">chunk {{ c.chunkIndex }}</app-badge>
+                      }
                       <app-badge tone="neutral">score {{ c.score }}</app-badge>
                     </div>
                     <p class="citation-snippet">{{ c.snippet }}</p>
@@ -108,6 +114,7 @@ import {
     .citation { padding: var(--space-3); background: var(--color-surface-card-hover); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
     .citation-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
     .citation-filename { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-hover); cursor: pointer; }
+    .citation-filename-live { cursor: default; color: var(--color-text-primary); }
     .citation-snippet { margin-top: 6px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
     .related-entities { margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--font-size-xs); color: var(--color-text-muted); }
     .related-entity { background: var(--color-surface-card); border-radius: var(--radius-sm); padding: 2px 6px; }

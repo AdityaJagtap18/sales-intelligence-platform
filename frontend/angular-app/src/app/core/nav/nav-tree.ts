@@ -63,6 +63,7 @@ export const NAV_TREE: NavGroup[] = [
       { label: 'Integrations', path: '/admin/integrations', icon: 'grid-plus' },
       { label: 'Model Configuration', path: '/admin/model-configuration', icon: 'cpu' },
       { label: 'User Management', path: '/admin/users', icon: 'user' },
+      { label: 'Release Notes', path: '/admin/release-notes', icon: 'file-text' },
     ],
   },
 ];

@@ -158,6 +158,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/user-management.component').then((m) => m.UserManagementComponent),
         data: { title: 'User Management' },
       },
+      {
+        path: 'admin/release-notes',
+        loadComponent: () => import('./features/admin/release-notes.component').then((m) => m.ReleaseNotesComponent),
+        data: { title: 'Release Notes' },
+      },
 
       { path: '**', redirectTo: 'overview/executive' },
     ],

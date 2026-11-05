@@ -20,6 +20,121 @@ The current version is tracked in [VERSION](VERSION).
 
 ---
 
+## [1.2.0] — AI Insights live-data grounding + responsible-AI safeguards
+
+### Added
+- `AiInsightsService#liveDataSource()`: AI Insights answers are now grounded in a live
+  aggregate snapshot from `AnalyticsService` (total revenue/orders/customers/products,
+  category and product revenue breakdowns) on every question, not only whatever happens
+  to be indexed in the Context Lake — so "what was June's revenue" cites the real current
+  figure instead of guessing or declining. Built from aggregate metrics only, never
+  per-customer rows, and degrades gracefully to document-only grounding if Databricks is
+  unreachable.
+- `com.nexora.platform.privacy`: `PiiRedactor` strips emails, phone numbers, SSNs and
+  card-like numbers from every Context Lake document chunk before it's embedded/stored in
+  Qdrant, and from every AI Insights question/answer before it reaches Ollama or is
+  persisted — GDPR Art. 5(1)(c) data minimisation. `DataRetentionService` purges
+  `ai_insight_run`/`prompt_run` rows older than `privacy.ai-log-retention-days` (default
+  90) daily — GDPR Art. 5(1)(e) storage limitation. Documented EU AI Act / responsible-AI
+  posture in `docs/implementation/known-limitations.md`.
+
+### Changed
+- Switched the active chat model (Model Configuration) from `llama3.2:1b` to the stronger
+  `qwen2.5:3b` — the 1.2B model was producing incoherent/off-task answers (e.g. refusing to
+  summarize plain sales figures as a "personal statement").
+
+### Verified
+- Asked AI Insights "What was the total revenue and top category in June 2008?" — answer
+  now states the exact real figures ($956,303.59, Touring Bikes 31.14%) instead of hedging.
+- Confirmed a question containing a fake email/phone number is redacted
+  (`[REDACTED-EMAIL]`/`[REDACTED-PHONE]`) in the persisted `ai_insight_run` row.
+
+---
+
+## [1.1.4] — Fix: Ollama port collision with a native install
+
+### Fixed
+- Prompt Playground/AI Insights returned "model not found" or no output even though
+  System Health reported Ollama UP. A native Ollama install on this machine was also bound
+  to port 11434; it won the port on one loopback interface while Docker's `ollama`
+  container ended up reachable only on the other, so the backend's `localhost:11434`
+  silently resolved to the wrong instance. Moved `OLLAMA_PORT`/`ollama.url`'s default to
+  `11435` so this app's Ollama calls are unambiguous regardless of what else runs on the
+  host.
+
+---
+
+## [1.1.3] — Performance: cache Databricks SQL reads
+
+### Added
+- `DatabricksSqlClient` now caches query results (30s TTL, keyed by statement text) — the
+  single chokepoint nearly every page's data passes through, each call a real network round
+  trip to the SQL Warehouse (~780ms measured cold vs. ~2ms cached). Plain
+  `ConcurrentHashMap` with a scheduled sweep, since no caching library is available in this
+  offline Maven build. `SELECT 1` connectivity probes are excluded so System Health/Data
+  Sources always report live state; the cache clears when a triggered pipeline run reaches
+  a terminal state.
+
+---
+
+## [1.1.2] — Fix: frontend/backend connectivity
+
+### Fixed
+- `environment.ts` pointed the Angular app at port 8081; the Spring Boot dev server runs on
+  8080 — every API call failed outright.
+- `mvnw spring-boot:run` (unlike docker-compose) never loads the repo-root `.env`, leaving
+  `databricks.host` empty and causing 500s ("URI with undefined scheme") on every
+  Databricks-backed endpoint. Added `run-dev.cmd` to pull the `DATABRICKS_*` vars from
+  `.env` before launching the dev server.
+
+---
+
+## [1.1.1] — Fix: dev server launch config
+
+### Fixed
+- `.claude/launch.json`'s `spring-boot-api` entry combined `runtimeExecutable:
+  "backend/spring-boot-api/mvnw.cmd"` with `cwd: "backend/spring-boot-api"`, doubling the
+  path and failing to resolve on Windows. Made it relative to `cwd` instead.
+
+---
+
+## [1.1.0] — Phase 3 Groups 1–5: all remaining placeholder routes implemented
+
+Turns the last 18 Phase 2 placeholder routes into real, fully-functional modules — closing
+out the full application scope beyond the Phase 1–10 MVP roadmap.
+
+### Added
+- **Group 1 (BI)**: Sales Dashboard (filtered analytics, drill-down, CSV export), Reports
+  (catalog + generation composing existing services, `report_execution` history),
+  Customer Analytics (segmentation, geographic distribution, detail drawer), Forecasting
+  (linear regression in Spring Boot, honest `INSUFFICIENT_DATA` below 3 periods,
+  `forecast_run`), Anomaly Detection (reuses `AnalyticsService#anomalies()`, adds
+  `anomaly_acknowledgement`).
+- **Group 2 (Data Platform)**: Data Sources (`data_source` table, real Test Connection for
+  Databricks/Postgres, masked credentials), Data Pipelines (`pipeline_definition` registry
+  generalized from one hardcoded job id), Data Quality (reads
+  `workspace.nexora.data_quality_report`, "Execute checks" re-triggers the real pipeline).
+- **Group 3 (Observability)**: System Health (real connectivity checks against every
+  external dependency), Pipeline Monitoring (reliability view over existing run data),
+  Logs & Traces (real in-process Logback ring buffer + Actuator httpexchanges, honestly
+  scoped to one process), Alerts (`AlertEvaluationService` over 4 real conditions), Metrics
+  (explorer over the live Micrometer `MeterRegistry`).
+- **Group 4 (Intelligence)**: AI Insights — grounded Q&A reusing `DocumentSearchService`
+  (Qdrant/Ollama), `OllamaChatClient`, and `GraphQueryService#traverse` for citations'
+  related entities; honest `NO_SOURCES`/`INSUFFICIENT_CONTEXT` states instead of
+  unsourced answers; `ai_insight_run` history.
+- **Group 5 (Administration)**: Settings (read-only effective-config viewer), Integrations
+  (composition of System Health + Data Sources), Model Configuration (switch the active
+  Ollama chat model at runtime, `model_configuration` table), User Management (`app_user`
+  table, salted PBKDF2 password hashing — no Spring Security/bcrypt cached in this offline
+  build). Removed the now-superseded placeholder-page component.
+
+### Verified
+- Backend's full test suite and frontend's Karma suite pass after each group; schema
+  validated against Postgres for every new table.
+
+---
+
 ## [1.0.0] — Phase 10 completed: Production validation (local MVP complete)
 
 ### Added

@@ -110,6 +110,38 @@ fabricated data.
   Health's connectivity checks and the Data Sources registry — both already built in Groups 2–3 —
   specifically to avoid a third, redundant "is this thing connected" implementation.
 
+## Responsible AI / GDPR / EU AI Act posture
+
+These are concrete technical measures, not a claim of full legal compliance -- that needs a DPO/
+legal review no code can substitute for. What's actually implemented:
+
+- **AI Insights is now grounded in live Databricks data, not only uploaded documents.**
+  `AiInsightsService#liveDataSource()` pulls an aggregate snapshot from `AnalyticsService`
+  (total revenue/orders/customers/products, category and product revenue breakdowns) on every
+  question, so answers about sales figures cite the real current numbers instead of only whatever
+  text happens to be indexed in the Context Lake. This snapshot is deliberately built from
+  aggregate metrics only -- **never per-customer rows** -- so no personal data reaches the Ollama
+  prompt through this path (GDPR Art. 5(1)(c) data minimisation). It degrades gracefully to
+  document-only grounding if Databricks is unreachable, rather than failing the question.
+- **`PiiRedactor` strips emails, phone numbers, SSNs and card-like numbers** from every Context
+  Lake document chunk before it's embedded or stored in Qdrant, and from every AI Insights
+  question/answer before it's sent to Ollama or persisted. It's a pattern-based heuristic, not a
+  named-entity recognizer -- it will not catch a bare personal name with no surrounding pattern
+  (e.g. an email or phone number nearby). Prompt Playground's free-text input is intentionally left
+  unredacted: it's a prompt-testing sandbox where the user supplies arbitrary text directly, not a
+  path that processes a third party's personal data.
+- **`DataRetentionService` purges `ai_insight_run` and `prompt_run` rows older than
+  `privacy.ai-log-retention-days` (default 90) daily.** Those two tables are this app's own audit
+  trail of AI usage (every question/prompt and its answer, with a timestamp); an audit trail with
+  no retention limit becomes an unbounded store of whatever a user typed, including accidental
+  personal data that slipped past redaction (GDPR Art. 5(1)(e) storage limitation).
+- **EU AI Act**: this app is an internal BI copilot answering questions about aggregate sales data,
+  not a system making decisions about natural persons (employment, credit, law enforcement, etc.),
+  so it does not fall under the Act's high-risk categories (Annex III). The transparency obligation
+  for AI-generated content is met structurally -- every AI Insights/Prompt Playground answer is
+  shown in its own labelled "Answer"/"Run" panel with its model name, latency and real citations,
+  never presented as human-authored content.
+
 ## Local environment
 
 - **Docker's Ollama is mapped to host port 11435, not Ollama's default 11434.** On a machine that

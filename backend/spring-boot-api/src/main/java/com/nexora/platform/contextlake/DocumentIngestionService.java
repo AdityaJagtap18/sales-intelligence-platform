@@ -9,11 +9,19 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nexora.platform.privacy.PiiRedactor;
+
 /**
  * Orchestrates a document upload: MinIO for the raw file (ADR-005: local
  * documents only, not analytical data), text extraction + chunking, and
  * embeddings into Qdrant for semantic search. Postgres only tracks metadata
  * and status — the chunk text/vectors live in Qdrant, not duplicated here.
+ *
+ * <p>Each chunk is run through {@link PiiRedactor} before it is embedded or
+ * stored, so an uploaded document's personal data (an email address, phone
+ * number, etc. that happened to be in the file) never reaches the embedding
+ * model, Qdrant, or an AI Insights citation -- GDPR data minimisation
+ * applied at ingestion rather than left to every downstream reader.
  */
 @Service
 public class DocumentIngestionService {
@@ -60,7 +68,8 @@ public class DocumentIngestionService {
 
             List<Map<String, Object>> points = new ArrayList<>();
             for (int i = 0; i < chunks.size(); i++) {
-                List<Double> vector = embeddingClient.embed(chunks.get(i));
+                String redactedChunk = PiiRedactor.redact(chunks.get(i));
+                List<Double> vector = embeddingClient.embed(redactedChunk);
                 points.add(Map.of(
                         "id", UUID.randomUUID().toString(),
                         "vector", vector,
@@ -68,7 +77,7 @@ public class DocumentIngestionService {
                                 "documentId", document.getId(),
                                 "filename", document.getFilename(),
                                 "chunkIndex", i,
-                                "text", chunks.get(i))));
+                                "text", redactedChunk)));
             }
             qdrantClient.upsert(points);
 
