@@ -1,5 +1,6 @@
 package com.nexora.platform.analytics;
 
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -26,7 +27,7 @@ class AnalyticsControllerTest {
 
     @Test
     void salesSummaryReturnsTheServiceDtoAsJson() throws Exception {
-        when(analyticsService.salesSummary()).thenReturn(
+        when(analyticsService.salesSummary(isNull(), isNull())).thenReturn(
                 new SalesSummaryDto(956303.59, 32, 29884.49, 847, 295, "Touring Bikes", 220655.38, 23.07));
 
         mockMvc.perform(get("/analytics/sales-summary"))
