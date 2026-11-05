@@ -1,20 +1,5 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './core/layout/shell/shell.component';
-import { PlaceholderPageComponent } from './shared/components/placeholder-page/placeholder-page.component';
-
-interface PlaceholderData {
-  title: string;
-  description: string;
-  icon: string;
-  phase: string;
-}
-
-function placeholder(data: PlaceholderData) {
-  return {
-    loadComponent: () => import('./shared/components/placeholder-page/placeholder-page.component').then((m) => m.PlaceholderPageComponent),
-    data,
-  };
-}
 
 export const routes: Routes = [
   {
@@ -153,10 +138,26 @@ export const routes: Routes = [
         data: { title: 'Metrics' },
       },
 
-      { path: 'admin/settings', ...placeholder({ title: 'Settings', description: 'Application configuration.', icon: 'settings', phase: 'Ongoing' }) },
-      { path: 'admin/integrations', ...placeholder({ title: 'Integrations', description: 'Connected sources and external services.', icon: 'grid-plus', phase: 'Ongoing' }) },
-      { path: 'admin/model-configuration', ...placeholder({ title: 'Model Configuration', description: 'Configure local LLM and embedding models.', icon: 'cpu', phase: 'Phase 8 — Prompt Library & AI' }) },
-      { path: 'admin/users', ...placeholder({ title: 'User Management', description: 'Users, roles and access control.', icon: 'user', phase: 'Phase 10 — Production Validation' }) },
+      {
+        path: 'admin/settings',
+        loadComponent: () => import('./features/admin/settings.component').then((m) => m.SettingsComponent),
+        data: { title: 'Settings' },
+      },
+      {
+        path: 'admin/integrations',
+        loadComponent: () => import('./features/admin/integrations.component').then((m) => m.IntegrationsComponent),
+        data: { title: 'Integrations' },
+      },
+      {
+        path: 'admin/model-configuration',
+        loadComponent: () => import('./features/admin/model-configuration.component').then((m) => m.ModelConfigurationComponent),
+        data: { title: 'Model Configuration' },
+      },
+      {
+        path: 'admin/users',
+        loadComponent: () => import('./features/admin/user-management.component').then((m) => m.UserManagementComponent),
+        data: { title: 'User Management' },
+      },
 
       { path: '**', redirectTo: 'overview/executive' },
     ],

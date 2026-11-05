@@ -56,4 +56,17 @@ How each module gets its data, and the cross-module links the spec requires.
 13. **AI Insights -> Knowledge Graph**: each citation's "related entities" come from `GraphQueryService#traverse("document", id, 1)` — the same traversal Graph Explorer uses — following the real `(Document)-[:MENTIONS]->(Product|ProductCategory)` edges `GraphSyncService` already writes. Empty (not an error) if that document hasn't been graph-synced yet.
 14. **AI Insights -> Context Lake (no sources)**: when nothing is indexed yet, the page's `NO_SOURCES` state links straight to Context Lake to upload a document, rather than a dead end.
 
-Still to implement in later groups: Model Configuration -> AI Insights, System Health -> Integrations.
+## Group 5 additions
+
+| Module | Data source | Path |
+|---|---|---|
+| Settings | Existing `@ConfigurationProperties` beans + Spring `Environment` | Angular -> `/api/settings` -> `SettingsService` -> `DatabricksProperties`/`MinioProperties`/`QdrantProperties`/`OllamaProperties`/`GraphProperties` |
+| Integrations | System Health + Data Sources (both already built) | Angular composes `/api/observability/system-health` + `/api/sources` directly — no new backend endpoint |
+| Model Configuration | Real `GET /api/tags` call to Ollama + `model_configuration` table | Angular -> `/api/model-configuration/*` -> `ModelConfigurationService` -> the same `ollamaRestClient` bean Context Lake uses |
+| User Management | `app_user` table | Angular -> `/api/users/*` -> `UserService` -> `AppUserRepository` |
+
+15. **Model Configuration -> AI Insights / Prompt Playground**: `OllamaChatClient.chatModel()` now reads `ModelConfigurationService#activeChatModel()` instead of the static `ollama.chat-model` property, so a model switch on the Model Configuration page takes effect on the very next Prompt Playground run or AI Insights question — no restart, no second code path.
+16. **System Health -> Integrations**: Integrations' "Infrastructure Connections" panel is System Health's own component list, with a button straight back to the full System Health page.
+17. **Data Sources -> Integrations**: Integrations' "Registered Data Sources" panel is the Data Sources registry's own rows, with a button back to Data Sources.
+
+All cross-module workflows named in the original Phase 3 spec are now implemented. Remaining work is the known-limitations items below (mainly: no HTTP-layer auth enforcement yet, since Spring Security isn't cached in this offline Maven build).

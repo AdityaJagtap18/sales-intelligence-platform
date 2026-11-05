@@ -147,6 +147,30 @@ CREATE TABLE IF NOT EXISTS alert (
     acknowledged_by VARCHAR(128)
 );
 
+-- Phase 3, Group 5: application users (Admin > User Management). "user" is
+-- reserved in Postgres, hence app_user. password_hash is salted PBKDF2
+-- (see PasswordHasher) -- never plaintext.
+CREATE TABLE IF NOT EXISTS app_user (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    password_hash VARCHAR(256) NOT NULL,
+    password_salt VARCHAR(64) NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL,
+    last_login_at TIMESTAMPTZ
+);
+
+-- Phase 3, Group 5: admin-selected Ollama chat model override
+-- (Admin > Model Configuration). Single row (id = 1); OllamaChatClient falls
+-- back to the static ollama.chat-model property when this row is absent or
+-- its active_chat_model is null.
+CREATE TABLE IF NOT EXISTS model_configuration (
+    id BIGINT PRIMARY KEY,
+    active_chat_model VARCHAR(256),
+    updated_at TIMESTAMPTZ NOT NULL
+);
+
 -- Phase 3, Group 4: AI Insights question/answer history
 -- (Intelligence > AI Insights). answer/citation_count are null/0 for any
 -- non-ANSWERED status (NO_SOURCES, INSUFFICIENT_CONTEXT, GENERATION_FAILED)

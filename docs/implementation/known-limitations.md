@@ -86,6 +86,30 @@ fabricated data.
   numbered sources and admit when they don't contain the answer, but there is no separate
   fact-checking pass verifying it actually did so.
 
+## Administration (Group 5)
+
+- **No Spring Security dependency is cached in this offline Maven build**, and this sandbox has no
+  network access to fetch one (`./mvnw -o` is offline-only). User Management therefore provides
+  real, persisted users, roles and credential verification — passwords are hashed with salted
+  PBKDF2 (`javax.crypto`, 120,000 iterations, JDK built-in, never plaintext or a reversible
+  encryption) — but **there is no HTTP-layer login, session, or filter chain enforcing
+  authentication on any endpoint**, including `/api/users` itself. Retrofitting that across every
+  existing Angular `HttpClient` call (which currently sends no credentials anywhere) is a
+  substantially larger, riskier change than adding a user-administration CRUD page, so it is
+  explicitly out of scope here rather than half-implemented. `POST /api/users/login` genuinely
+  verifies credentials against the stored hash and reports success/failure; it is just not wired
+  into anything that gates access yet.
+- **A default `admin` account is seeded** at startup (`UserService#seedDefaultAdmin`) with a
+  fixed dev-only password, following the same pattern as this project's existing default
+  Postgres/MinIO/Neo4j dev credentials in `docker-compose.yml`/`.env.example` — not a production
+  credential.
+- **Settings is read-only.** Every value shown is bound at Spring Boot startup from environment
+  variables; there is no runtime config store, so the page doesn't offer an edit control that
+  wouldn't actually take effect without restarting the backend.
+- **Integrations adds no new backend or tracking system.** It is a frontend composition of System
+  Health's connectivity checks and the Data Sources registry — both already built in Groups 2–3 —
+  specifically to avoid a third, redundant "is this thing connected" implementation.
+
 ## Forecasting implementation choice
 
 The spec's forecasting section says to "prefer a Python service or worker if the existing
